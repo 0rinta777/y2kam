@@ -84,6 +84,7 @@ async function remove(strip) {
         v-for="strip in strips"
         :key="strip.$id"
         :strip="strip"
+        editable
         @edit="openEdit"
         @delete="remove"
       />

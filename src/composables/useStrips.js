@@ -58,6 +58,11 @@ export function useStrips() {
     return load([Query.equal('isPublic', true), Query.orderDesc('$createdAt'), Query.limit(50)])
   }
 
+  // READ: one strip by its ID (for the detail page)
+  function getStrip(id) {
+    return tablesDB.getRow({ databaseId: DB_ID, tableId: TABLE, rowId: id })
+  }
+
   // CREATE: upload the image, then save a row that points to it
   async function createStrip(blob, { caption, filter }) {
     const uid = user.value.$id
@@ -113,5 +118,15 @@ export function useStrips() {
     strips.value = strips.value.filter((s) => s.$id !== strip.$id)
   }
 
-  return { strips, loading, error, loadMine, loadPublic, createStrip, updateStrip, deleteStrip }
+  return {
+    strips,
+    loading,
+    error,
+    loadMine,
+    loadPublic,
+    getStrip,
+    createStrip,
+    updateStrip,
+    deleteStrip,
+  }
 }

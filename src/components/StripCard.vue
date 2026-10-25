@@ -1,7 +1,11 @@
 <script setup>
 import { imageUrl } from '@/composables/useStrips'
 
-defineProps({ strip: { type: Object, required: true } })
+defineProps({
+  strip: { type: Object, required: true },
+  editable: { type: Boolean, default: false }, // true in my gallery, false on the wall
+})
+
 defineEmits(['edit', 'delete'])
 
 // "2026-10-25T..." → "25 oct 2026"
@@ -14,13 +18,16 @@ function formatDate(iso) {
 
 <template>
   <article class="card">
-    <img :src="imageUrl(strip.imageId)" :alt="strip.caption || 'photo strip'" loading="lazy" />
-    <h3>{{ strip.caption || 'untitled strip' }}</h3>
+    <RouterLink :to="`/wall/${strip.$id}`" class="link">
+      <img :src="imageUrl(strip.imageId)" :alt="strip.caption || 'photo strip'" loading="lazy" />
+      <h3>{{ strip.caption || 'untitled strip' }}</h3>
+    </RouterLink>
+    <p v-if="!editable" class="meta">by {{ strip.username || 'someone' }}</p>
     <p class="meta">
       {{ formatDate(strip.$createdAt) }} ·
       <span class="badge">{{ strip.isPublic ? 'on the wall' : 'private' }}</span>
     </p>
-    <div class="actions">
+    <div v-if="editable" class="actions">
       <button :aria-label="`edit ${strip.caption || 'strip'}`" @click="$emit('edit', strip)">
         edit
       </button>
@@ -60,5 +67,13 @@ function formatDate(iso) {
 .actions {
   display: flex;
   gap: 8px;
+}
+
+.link {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: inherit;
+  text-decoration: none;
 }
 </style>
