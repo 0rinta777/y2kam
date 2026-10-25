@@ -9,8 +9,12 @@ const routes = [
   { path: '/', name: 'home', component: () => import('@/views/HomeView.vue') },
   { path: '/booth', name: 'booth', component: () => import('@/views/BoothView.vue') },
   { path: '/wall', name: 'wall', component: () => import('@/views/WallView.vue') },
-  { path: '/wall', name: 'wall', component: () => import('@/views/WallView.vue') },
-  { path: '/wall/:id', name: 'strip', component: () => import('@/views/StripDetailView.vue') },
+  {
+    path: '/wall/:id',
+    name: 'strip',
+    component: () => import('@/views/StripDetailView.vue'),
+    meta: { requiresAuth: true },
+  },
   { path: '/login', name: 'login', component: () => import('@/views/LoginView.vue') },
 
   // Logged-in users only

@@ -13,7 +13,7 @@ function stripPermissions(userId, isPublic) {
     Permission.update(Role.user(userId)),
     Permission.delete(Role.user(userId)),
   ]
-  if (isPublic) perms.push(Permission.read(Role.any()))
+  if (isPublic) perms.push(Permission.read(Role.users())) // any logged-in user, not guests
   return perms
 }
 
