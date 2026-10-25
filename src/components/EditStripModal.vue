@@ -68,14 +68,18 @@ function submit() {
 }
 .modal {
   display: flex;
+  flex-wrap: wrap;
   gap: 24px;
-  max-width: 640px;
+  max-width: 560px;
+  max-height: 90vh; /* never taller than the screen */
+  overflow-y: auto; /* scroll inside the popup if needed */
   padding: 24px;
   border-radius: 16px;
   background: white;
 }
 .modal img {
-  width: 160px;
+  width: auto;
+  max-height: 280px; /* keeps the tall strip small */
   border-radius: 8px;
 }
 .fields {
