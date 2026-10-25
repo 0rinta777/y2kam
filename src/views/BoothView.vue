@@ -2,9 +2,13 @@
 import { ref } from 'vue'
 import { useCamera } from '@/composables/useCamera'
 import { FILTERS } from '@/lib/filters'
-import { buildStrip } from '@/lib/strip'
+import { useAuth } from '@/composables/useAuth'
+import { useStrips } from '@/composables/useStrips'
+import { buildStrip, canvasToBlob } from '@/lib/strip'
 
 const { videoEl, error, starting, isOn, start, stop, capture } = useCamera()
+const { isLoggedIn } = useAuth()
+const { createStrip } = useStrips()
 
 const PHOTO_COUNT = 4
 const filter = ref(FILTERS[0]) // the chosen filter
@@ -14,8 +18,28 @@ const photosTaken = ref(0)
 const flash = ref(false) // white flash after each photo
 const stripCanvas = ref(null) // the finished strip (used for saving later)
 const stripUrl = ref('') // the finished strip as an image the <img> can show
+// Saving
+const caption = ref('')
+const saving = ref(false)
+const saveError = ref('')
+const saved = ref(false)
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
+
+async function save() {
+  saving.value = true
+  saveError.value = ''
+  try {
+    const blob = await canvasToBlob(stripCanvas.value)
+    await createStrip(blob, { caption: caption.value.trim(), filter: filter.value.name })
+    saved.value = true
+  } catch (e) {
+    console.error('save failed:', e)
+    saveError.value = "couldn't save your strip. check your connection and try again."
+  } finally {
+    saving.value = false
+  }
+}
 
 async function openCamera() {
   await start()
@@ -52,6 +76,9 @@ async function takePhotos() {
 async function retake() {
   stripCanvas.value = null
   stripUrl.value = ''
+  caption.value = ''
+  saved.value = false
+  saveError.value = ''
   await openCamera()
 }
 </script>
@@ -99,9 +126,36 @@ async function retake() {
     <!-- Step 4: result -->
     <section v-if="step === 'done'" class="result">
       <img :src="stripUrl" alt="your photo strip" class="strip" />
-      <div>
-        <button @click="retake">retake</button>
-        <button disabled>save to gallery (next step)</button>
+      <div class="actions">
+        <!-- Saved -->
+        <template v-if="saved">
+          <p role="status">saved to your gallery ♥</p>
+          <RouterLink to="/gallery">go to my gallery</RouterLink>
+          <button @click="retake">take another</button>
+        </template>
+
+        <!-- Logged in: caption + save -->
+        <template v-else-if="isLoggedIn">
+          <label>
+            caption
+            <input v-model="caption" maxlength="120" placeholder="besties at the mall <3" />
+          </label>
+          <p v-if="saveError" role="alert">{{ saveError }}</p>
+          <button :disabled="saving" @click="save">
+            {{ saving ? 'saving…' : 'save to gallery' }}
+          </button>
+          <button :disabled="saving" @click="retake">retake</button>
+        </template>
+
+        <!-- Guest -->
+        <template v-else>
+          <p>log in to save strips to your gallery</p>
+          <RouterLink to="/login?redirect=/booth">log in or sign up</RouterLink>
+          <button @click="retake">retake</button>
+        </template>
+
+        <!-- Everyone can download -->
+        <a :href="stripUrl" download="y2kam-strip.jpg">download strip</a>
       </div>
     </section>
   </main>
@@ -161,5 +215,11 @@ async function retake() {
   width: 200px;
   border-radius: 8px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 </style>
