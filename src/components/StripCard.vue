@@ -1,0 +1,64 @@
+<script setup>
+import { imageUrl } from '@/composables/useStrips'
+
+defineProps({ strip: { type: Object, required: true } })
+defineEmits(['edit', 'delete'])
+
+// "2026-10-25T..." → "25 oct 2026"
+function formatDate(iso) {
+  return new Date(iso)
+    .toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+    .toLowerCase()
+}
+</script>
+
+<template>
+  <article class="card">
+    <img :src="imageUrl(strip.imageId)" :alt="strip.caption || 'photo strip'" loading="lazy" />
+    <h3>{{ strip.caption || 'untitled strip' }}</h3>
+    <p class="meta">
+      {{ formatDate(strip.$createdAt) }} ·
+      <span class="badge">{{ strip.isPublic ? 'on the wall' : 'private' }}</span>
+    </p>
+    <div class="actions">
+      <button :aria-label="`edit ${strip.caption || 'strip'}`" @click="$emit('edit', strip)">
+        edit
+      </button>
+      <button :aria-label="`delete ${strip.caption || 'strip'}`" @click="$emit('delete', strip)">
+        delete
+      </button>
+    </div>
+  </article>
+</template>
+
+<style scoped>
+.card {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+}
+.card img {
+  width: 100%;
+  border-radius: 8px;
+}
+.card h3 {
+  margin: 0;
+  font-size: 16px;
+}
+.meta {
+  margin: 0;
+  font-size: 13px;
+}
+.badge {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #eee;
+}
+.actions {
+  display: flex;
+  gap: 8px;
+}
+</style>
