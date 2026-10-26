@@ -53,6 +53,16 @@ export function useStrips() {
     ])
   }
 
+  // READ: one user's public strips (profile page)
+  function loadByUser(userId) {
+    return load([
+      Query.equal('userId', userId),
+      Query.equal('isPublic', true),
+      Query.orderDesc('$createdAt'),
+      Query.limit(50),
+    ])
+  }
+
   // READ: public strips for the wall, 12 at a time (pagination)
   const PAGE_SIZE = 12
   const hasMore = ref(false)
@@ -152,6 +162,7 @@ export function useStrips() {
     hasMore,
     loadingMore,
     loadMine,
+    loadByUser,
     loadPublic,
     loadMorePublic,
     getStrip,

@@ -44,6 +44,14 @@ const routes = [
     component: () => import('@/views/StripDetailView.vue'),
     meta: { requiresAuth: true, title: 'strip' },
   },
+
+  {
+    path: '/u/:id',
+    name: 'profile',
+    component: () => import('@/views/ProfileView.vue'),
+    meta: { requiresAuth: true, title: 'profile' },
+  },
+
   {
     path: '/gallery',
     name: 'gallery',

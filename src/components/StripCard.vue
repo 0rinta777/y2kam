@@ -38,7 +38,9 @@ function formatDate(iso) {
       <img :src="imageUrl(strip.imageId)" :alt="strip.caption || 'photo strip'" loading="lazy" />
       <h3>{{ strip.caption || 'untitled strip' }}</h3>
     </RouterLink>
-    <p v-if="!editable" class="meta">by {{ strip.username || 'someone' }}</p>
+    <p v-if="!editable" class="meta">
+      by <RouterLink :to="`/u/${strip.userId}`">{{ strip.username || 'someone' }}</RouterLink>
+    </p>
     <!-- Wall only: like + comments right on the card -->
     <div v-if="!editable" class="social">
       <LikeButton :strip-id="strip.$id" />

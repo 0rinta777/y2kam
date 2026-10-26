@@ -90,7 +90,10 @@ function formatDate(iso) {
       <img :src="imageUrl(strip.imageId)" :alt="strip.caption || 'photo strip'" />
       <div class="info">
         <h1>{{ strip.caption || 'untitled strip' }}</h1>
-        <p>by {{ strip.username || 'someone' }} · {{ formatDate(strip.$createdAt) }}</p>
+        <p>
+          by <RouterLink :to="`/u/${strip.userId}`">{{ strip.username || 'someone' }}</RouterLink> ·
+          {{ formatDate(strip.$createdAt) }}
+        </p>
         <a :href="imageUrl(strip.imageId)" target="_blank" rel="noopener">open full size</a>
         <button type="button" @click="copyLink">
           {{ copied ? 'link copied ♥' : 'copy link' }}
