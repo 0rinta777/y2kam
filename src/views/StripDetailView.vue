@@ -2,6 +2,9 @@
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { useStrips, imageUrl } from '@/composables/useStrips'
+import { useAuth } from '@/composables/useAuth'
+import { useReports } from '@/composables/useReports'
+import ReportDialog from '@/components/ReportDialog.vue'
 
 const route = useRoute()
 const { getStrip } = useStrips()
@@ -9,6 +12,30 @@ const { getStrip } = useStrips()
 const strip = ref(null)
 const loading = ref(true)
 const error = ref('')
+
+const { user } = useAuth()
+const { createReport } = useReports()
+
+// Reporting
+const reporting = ref(false) // dialog open?
+const sending = ref(false)
+const reportError = ref('')
+const reported = ref(false)
+
+async function sendReport({ reason, note }) {
+  sending.value = true
+  reportError.value = ''
+  try {
+    await createReport(strip.value.$id, reason, note)
+    reporting.value = false
+    reported.value = true
+  } catch (e) {
+    console.error('report failed:', e)
+    reportError.value = "couldn't send the report. try again."
+  } finally {
+    sending.value = false
+  }
+}
 
 async function load() {
   loading.value = true
@@ -52,9 +79,18 @@ function formatDate(iso) {
         <h1>{{ strip.caption || 'untitled strip' }}</h1>
         <p>by {{ strip.username || 'someone' }} · {{ formatDate(strip.$createdAt) }}</p>
         <a :href="imageUrl(strip.imageId)" target="_blank" rel="noopener">open full size</a>
-        <!-- likes, comments and report come here later (Shoulds) -->
+        <!-- Report (not on your own strips) -->
+        <p v-if="reported" role="status">thanks, an admin will take a look ♥</p>
+        <button v-else-if="strip.userId !== user?.$id" @click="reporting = true">report</button>
       </div>
     </article>
+    <ReportDialog
+      v-if="reporting"
+      :sending="sending"
+      :error="reportError"
+      @close="reporting = false"
+      @submit="sendReport"
+    />
   </main>
 </template>
 
