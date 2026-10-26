@@ -24,6 +24,14 @@ const routes = [
     component: () => import('@/views/WallView.vue'),
     meta: { title: 'the wall' },
   },
+
+  {
+    path: '/about',
+    name: 'about',
+    component: () => import('@/views/AboutView.vue'),
+    meta: { title: 'about' },
+  },
+
   {
     path: '/login',
     name: 'login',
@@ -97,6 +105,12 @@ const routes = [
         name: 'admin-reports',
         component: () => import('@/views/admin/AdminReportsView.vue'),
         meta: { title: 'admin · reports' },
+      },
+      {
+        path: 'messages',
+        name: 'admin-messages',
+        component: () => import('@/views/admin/AdminMessagesView.vue'),
+        meta: { title: 'admin · messages' },
       },
     ],
   },

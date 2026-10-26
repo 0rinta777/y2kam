@@ -19,6 +19,7 @@ async function onLogout() {
         <RouterLink to="/admin" exact-active-class="active">dashboard</RouterLink>
         <RouterLink to="/admin/catalog" active-class="active">filters & frames</RouterLink>
         <RouterLink to="/admin/reports" active-class="active">reports</RouterLink>
+        <RouterLink to="/admin/messages" active-class="active">messages</RouterLink>
       </nav>
       <p>{{ user?.name }}</p>
       <button @click="onLogout">log out</button>

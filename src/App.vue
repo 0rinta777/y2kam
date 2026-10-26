@@ -15,6 +15,7 @@ async function onLogout() {
   <nav>
     <RouterLink to="/">home</RouterLink>
     <RouterLink to="/booth">booth</RouterLink>
+    <RouterLink to="/about">about</RouterLink>
     <RouterLink to="/wall">wall</RouterLink>
 
     <!-- Only shown when logged in -->
