@@ -1,6 +1,7 @@
 import { Query } from 'appwrite'
 import { account, tablesDB, storage, DB_ID, BUCKET_ID } from '@/lib/appwrite'
 import { useAuth } from '@/composables/useAuth'
+import { useProfile, getProfile } from '@/composables/useProfile'
 
 // All rows in a table that belong to this user
 async function myRows(tableId, userId) {
@@ -14,10 +15,11 @@ async function myRows(tableId, userId) {
 
 export function useAccount() {
   const { user, loadUser } = useAuth()
+  const { saveProfile } = useProfile()
 
-  // UPDATE: new username on the account AND on my strips + comments
-  // (the name is also stored on those rows, so old posts show the new name)
+  // UPDATE username: profile first (fails with 409 if taken), then account, strips and comments
   async function changeName(name) {
+    await saveProfile({ username: name })
     await account.updateName({ name })
     const uid = user.value.$id
     const [strips, comments] = await Promise.all([myRows('strips', uid), myRows('comments', uid)])
@@ -39,18 +41,22 @@ export function useAccount() {
         }),
       ),
     ])
-    await loadUser() // refresh the name in the nav
+    await loadUser()
   }
 
-  // UPDATE: new password (Appwrite checks the old one)
+  // UPDATE password (Appwrite checks the old one)
   function changePassword(oldPassword, password) {
     return account.updatePassword({ password, oldPassword })
   }
 
-  // DELETE: remove my strips (+ images) and comments, then block the account
+  // DELETE: strips (+ images), comments, profile (+ picture), then block the account
   async function deleteAccount() {
     const uid = user.value.$id
-    const [strips, comments] = await Promise.all([myRows('strips', uid), myRows('comments', uid)])
+    const [strips, comments, profile] = await Promise.all([
+      myRows('strips', uid),
+      myRows('comments', uid),
+      getProfile(uid),
+    ])
     for (const s of strips) {
       await tablesDB.deleteRow({ databaseId: DB_ID, tableId: 'strips', rowId: s.$id })
       await storage.deleteFile({ bucketId: BUCKET_ID, fileId: s.imageId }).catch(() => {})
@@ -58,8 +64,13 @@ export function useAccount() {
     for (const c of comments) {
       await tablesDB.deleteRow({ databaseId: DB_ID, tableId: 'comments', rowId: c.$id })
     }
-    await account.updateStatus() // blocks the account and ends all sessions
-    await loadUser() // now logged out
+    if (profile) {
+      if (profile.avatarId)
+        await storage.deleteFile({ bucketId: BUCKET_ID, fileId: profile.avatarId }).catch(() => {})
+      await tablesDB.deleteRow({ databaseId: DB_ID, tableId: 'profiles', rowId: uid })
+    }
+    await account.updateStatus()
+    await loadUser()
   }
 
   return { changeName, changePassword, deleteAccount }

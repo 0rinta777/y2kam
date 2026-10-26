@@ -1,35 +1,75 @@
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
 import { useAccount } from '@/composables/useAccount'
+import { useProfile, getProfile, avatarUrl } from '@/composables/useProfile'
 
 const router = useRouter()
+const route = useRoute()
 const { user } = useAuth()
 const { changeName, changePassword, deleteAccount } = useAccount()
+const { saveProfile, changeAvatar } = useProfile()
 
-// --- Username ---
+// --- Profile ---
 const name = ref(user.value?.name || '')
-const nameMsg = ref('')
-const nameError = ref('')
-const savingName = ref(false)
+const bio = ref('')
+const avatarId = ref(null)
+const profileMsg = ref('')
+const profileError = ref(
+  route.query.taken ? 'your username is already taken. pick a new one ♥' : '',
+)
+const savingProfile = ref(false)
+const uploadingAvatar = ref(false)
 
-async function saveName() {
-  nameMsg.value = ''
-  nameError.value = ''
-  if (!name.value.trim()) {
-    nameError.value = "username can't be empty"
+onMounted(async () => {
+  try {
+    const profile = await getProfile(user.value.$id)
+    if (profile) {
+      name.value = profile.username
+      bio.value = profile.bio || ''
+      avatarId.value = profile.avatarId || null
+    }
+  } catch (e) {
+    console.error('profile load failed:', e)
+  }
+})
+
+async function onAvatarChange(event) {
+  const file = event.target.files[0]
+  if (!file) return
+  uploadingAvatar.value = true
+  profileError.value = ''
+  try {
+    avatarId.value = await changeAvatar(file, avatarId.value)
+    profileMsg.value = 'new profile picture ♥'
+  } catch (e) {
+    console.error('avatar failed:', e)
+    profileError.value = "couldn't upload the picture. try a jpg or png under 5 MB."
+  } finally {
+    uploadingAvatar.value = false
+  }
+}
+
+async function saveProfileForm() {
+  profileMsg.value = ''
+  profileError.value = ''
+  const newName = name.value.trim()
+  if (!newName) {
+    profileError.value = "username can't be empty"
     return
   }
-  savingName.value = true
+  savingProfile.value = true
   try {
-    await changeName(name.value.trim())
-    nameMsg.value = 'username saved ♥'
+    if (newName !== user.value.name) await changeName(newName)
+    await saveProfile({ bio: bio.value.trim() })
+    profileMsg.value = 'profile saved ♥'
   } catch (e) {
-    console.error('name failed:', e)
-    nameError.value = "couldn't save your username. try again."
+    console.error('profile failed:', e)
+    profileError.value =
+      e.code === 409 ? 'that username is taken, try another one' : "couldn't save. try again."
   } finally {
-    savingName.value = false
+    savingProfile.value = false
   }
 }
 
@@ -93,17 +133,44 @@ async function removeAccount() {
     <h1>settings</h1>
     <p>logged in as {{ user?.email }}</p>
 
-    <!-- Username -->
-    <form @submit.prevent="saveName">
-      <h2>username</h2>
+    <!-- Profile -->
+    <form @submit.prevent="saveProfileForm">
+      <h2>profile</h2>
+
+      <div class="avatar-row">
+        <img v-if="avatarId" :src="avatarUrl(avatarId)" alt="your profile picture" class="avatar" />
+        <div v-else class="avatar placeholder" aria-hidden="true">{{ name.charAt(0) || '?' }}</div>
+        <label>
+          {{ uploadingAvatar ? 'uploading…' : 'change profile picture' }}
+          <input
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            :disabled="uploadingAvatar"
+            @change="onAvatarChange"
+          />
+        </label>
+      </div>
+
       <label>
         username
         <input v-model="name" maxlength="50" required />
       </label>
-      <p v-if="nameError" class="field-error" role="alert">{{ nameError }}</p>
-      <p v-if="nameMsg" role="status">{{ nameMsg }}</p>
-      <button type="submit" :disabled="savingName">
-        {{ savingName ? 'saving…' : 'save username' }}
+
+      <label>
+        bio
+        <textarea
+          v-model="bio"
+          maxlength="160"
+          rows="3"
+          placeholder="y2k girlie ✿ sleepovers & glitter"
+        />
+      </label>
+      <small>{{ bio.length }}/160</small>
+
+      <p v-if="profileError" class="field-error" role="alert">{{ profileError }}</p>
+      <p v-if="profileMsg" role="status">{{ profileMsg }}</p>
+      <button type="submit" :disabled="savingProfile">
+        {{ savingProfile ? 'saving…' : 'save profile' }}
       </button>
     </form>
 
@@ -132,7 +199,9 @@ async function removeAccount() {
     <!-- Danger zone -->
     <form class="danger" @submit.prevent="removeAccount">
       <h2>delete account</h2>
-      <p>this deletes all your strips and comments and closes your account. it can't be undone.</p>
+      <p>
+        this deletes your strips, comments and profile and closes your account. it can't be undone.
+      </p>
       <label>
         type <strong>delete</strong> to confirm
         <input v-model="confirmText" autocomplete="off" />
@@ -163,6 +232,24 @@ form {
 }
 form h2 {
   margin: 0;
+}
+.avatar-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.placeholder {
+  display: grid;
+  place-items: center;
+  background: #ddd;
+  font-size: 32px;
+  font-weight: bold;
 }
 .danger {
   border-color: #f3b4cf;

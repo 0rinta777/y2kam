@@ -2,8 +2,10 @@
 import { ref } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
+import { useProfile } from '@/composables/useProfile'
 
 const { login, register, sendRecovery } = useAuth()
+const { ensureProfile } = useProfile()
 const router = useRouter()
 const route = useRoute()
 
@@ -32,7 +34,9 @@ async function submit() {
       router.push(route.query.redirect || '/gallery')
     } else if (mode.value === 'signup') {
       await register(name.value, email.value, password.value)
-      router.push(route.query.redirect || '/gallery')
+      // Create the profile. If the username is taken, send them to settings to pick another.
+      const ok = await ensureProfile()
+      router.push(ok ? route.query.redirect || '/gallery' : '/settings?taken=1')
     } else {
       await sendRecovery(email.value)
       // Same message whether the account exists or not, so nobody can check which emails are registered
