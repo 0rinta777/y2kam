@@ -59,3 +59,14 @@ export function useLikes(stripId) {
 
   return { count, myLike, busy, load, toggle }
 }
+
+// Total likes on a list of strips ("likes collected" on profiles)
+export async function countLikesFor(stripIds) {
+  if (stripIds.length === 0) return 0
+  const res = await tablesDB.listRows({
+    databaseId: DB_ID,
+    tableId: TABLE,
+    queries: [Query.equal('stripId', stripIds), Query.limit(1)], // a list = "any of these strips"
+  })
+  return res.total
+}
