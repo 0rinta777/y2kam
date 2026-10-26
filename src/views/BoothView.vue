@@ -1,23 +1,49 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useCamera } from '@/composables/useCamera'
-import { FILTERS } from '@/lib/filters'
 import { useAuth } from '@/composables/useAuth'
 import { useStrips } from '@/composables/useStrips'
+import { useCatalog, fileUrl } from '@/composables/useCatalog'
+import { toCss } from '@/lib/filters'
 import { buildStrip, canvasToBlob } from '@/lib/strip'
+import OptionPicker from '@/components/OptionPicker.vue'
 
 const { videoEl, error, starting, isOn, start, stop, capture } = useCamera()
 const { isLoggedIn } = useAuth()
 const { createStrip } = useStrips()
+const { items: catalog, loadActive } = useCatalog()
+
+// Load the active filters and frames the admin made
+onMounted(loadActive)
+
+// "none" options always exist, the rest come from Appwrite
+const NO_FILTER = { id: 'none', name: 'none', css: 'none' }
+const NO_FRAME = { id: 'none', name: 'no frame', url: null }
+
+const filters = computed(() => [
+  NO_FILTER,
+  ...catalog.value
+    .filter((item) => item.type === 'filter')
+    .map((item) => ({ id: item.$id, name: item.name, css: toCss(item.settings) })),
+])
+
+const frames = computed(() => [
+  NO_FRAME,
+  ...catalog.value
+    .filter((item) => item.type === 'frame' && item.fileId)
+    .map((item) => ({ id: item.$id, name: item.name, url: fileUrl(item.fileId) })),
+])
 
 const PHOTO_COUNT = 4
-const filter = ref(FILTERS[0]) // the chosen filter
+const filter = ref(NO_FILTER) // the chosen filter
+const frame = ref(NO_FRAME) // the chosen frame
 const step = ref('idle') // idle → ready → shooting → done
-const countdown = ref(0) // 3, 2, 1 shown on top of the camera
+const countdown = ref(0)
 const photosTaken = ref(0)
-const flash = ref(false) // white flash after each photo
-const stripCanvas = ref(null) // the finished strip (used for saving later)
-const stripUrl = ref('') // the finished strip as an image the <img> can show
+const flash = ref(false)
+const stripCanvas = ref(null)
+const stripUrl = ref('')
+
 // Saving
 const caption = ref('')
 const saving = ref(false)
@@ -26,27 +52,12 @@ const saved = ref(false)
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
-async function save() {
-  saving.value = true
-  saveError.value = ''
-  try {
-    const blob = await canvasToBlob(stripCanvas.value)
-    await createStrip(blob, { caption: caption.value.trim(), filter: filter.value.name })
-    saved.value = true
-  } catch (e) {
-    console.error('save failed:', e)
-    saveError.value = "couldn't save your strip. check your connection and try again."
-  } finally {
-    saving.value = false
-  }
-}
-
 async function openCamera() {
   await start()
   if (isOn.value) step.value = 'ready'
 }
 
-// Countdown, take 4 photos, build the strip
+// Countdown, take 4 photos, build the strip (with the frame on top)
 async function takePhotos() {
   step.value = 'shooting'
   photosTaken.value = 0
@@ -67,10 +78,25 @@ async function takePhotos() {
     await sleep(500)
   }
 
-  stripCanvas.value = await buildStrip(photos)
+  stripCanvas.value = await buildStrip(photos, frame.value.url)
   stripUrl.value = stripCanvas.value.toDataURL('image/jpeg', 0.9)
-  stop() // camera off once we're done
+  stop()
   step.value = 'done'
+}
+
+async function save() {
+  saving.value = true
+  saveError.value = ''
+  try {
+    const blob = await canvasToBlob(stripCanvas.value)
+    await createStrip(blob, { caption: caption.value.trim(), filter: filter.value.name })
+    saved.value = true
+  } catch (e) {
+    console.error('save failed:', e)
+    saveError.value = "couldn't save your strip. check your connection and try again."
+  } finally {
+    saving.value = false
+  }
 }
 
 async function retake() {
@@ -87,7 +113,7 @@ async function retake() {
   <main class="booth">
     <h1>booth</h1>
 
-    <!-- Camera view. Always in the page (v-show, not v-if) so useCamera can reach the <video> -->
+    <!-- Camera view. Always in the page (v-show) so useCamera can reach the <video> -->
     <div v-show="step === 'ready' || step === 'shooting'" class="camera">
       <video ref="videoEl" playsinline muted :style="{ filter: filter.css }" />
       <div v-if="countdown" class="countdown" aria-live="assertive">{{ countdown }}</div>
@@ -103,18 +129,10 @@ async function retake() {
       <p v-if="error" role="alert">{{ error }}</p>
     </section>
 
-    <!-- Step 2: pick a filter and shoot -->
+    <!-- Step 2: pick a filter and frame, then shoot -->
     <section v-if="step === 'ready'">
-      <div class="filters" role="group" aria-label="filters">
-        <button
-          v-for="f in FILTERS"
-          :key="f.name"
-          :aria-pressed="filter.name === f.name"
-          @click="filter = f"
-        >
-          {{ f.name }}
-        </button>
-      </div>
+      <OptionPicker v-model="filter" label="filter" :options="filters" />
+      <OptionPicker v-model="frame" label="frame" :options="frames" />
       <button @click="takePhotos">take photos</button>
     </section>
 
@@ -126,15 +144,14 @@ async function retake() {
     <!-- Step 4: result -->
     <section v-if="step === 'done'" class="result">
       <img :src="stripUrl" alt="your photo strip" class="strip" />
+
       <div class="actions">
-        <!-- Saved -->
         <template v-if="saved">
           <p role="status">saved to your gallery ♥</p>
           <RouterLink to="/gallery">go to my gallery</RouterLink>
           <button @click="retake">take another</button>
         </template>
 
-        <!-- Logged in: caption + save -->
         <template v-else-if="isLoggedIn">
           <label>
             caption
@@ -147,14 +164,12 @@ async function retake() {
           <button :disabled="saving" @click="retake">retake</button>
         </template>
 
-        <!-- Guest -->
         <template v-else>
           <p>log in to save strips to your gallery</p>
           <RouterLink to="/login?redirect=/booth">log in or sign up</RouterLink>
           <button @click="retake">retake</button>
         </template>
 
-        <!-- Everyone can download -->
         <a :href="stripUrl" download="y2kam-strip.jpg">download strip</a>
       </div>
     </section>
@@ -178,7 +193,7 @@ async function retake() {
   width: 100%;
   border-radius: 16px;
   background: #000;
-  transform: scaleX(-1); /* mirror, like a selfie */
+  transform: scaleX(-1);
 }
 .countdown {
   position: absolute;
@@ -196,30 +211,19 @@ async function retake() {
   background: white;
   border-radius: 16px;
 }
-.filters {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin-bottom: 12px;
-}
-.filters button[aria-pressed='true'] {
-  font-weight: bold;
-  outline: 2px solid currentColor;
-}
 .result {
   display: flex;
   gap: 24px;
   align-items: flex-start;
 }
-.strip {
-  width: 200px;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-}
-
 .actions {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+.strip {
+  width: 200px;
+  border-radius: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 </style>
