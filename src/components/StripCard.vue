@@ -1,12 +1,28 @@
 <script setup>
+import { ref, onMounted } from 'vue'
+import LikeButton from '@/components/LikeButton.vue'
+import CommentSection from '@/components/CommentSection.vue'
 import { imageUrl } from '@/composables/useStrips'
+import { countComments } from '@/composables/useComments'
 
-defineProps({
+const props = defineProps({
   strip: { type: Object, required: true },
   editable: { type: Boolean, default: false }, // true in my gallery, false on the wall
 })
 
 defineEmits(['edit', 'delete'])
+const showComments = ref(false) // comments open/closed on this card
+const commentCount = ref(0)
+
+// On the wall, load how many comments this strip has
+onMounted(async () => {
+  if (props.editable) return
+  try {
+    commentCount.value = await countComments(props.strip.$id)
+  } catch (e) {
+    console.error('comment count failed:', e)
+  }
+})
 
 // "2026-10-25T..." → "25 oct 2026"
 function formatDate(iso) {
@@ -23,6 +39,18 @@ function formatDate(iso) {
       <h3>{{ strip.caption || 'untitled strip' }}</h3>
     </RouterLink>
     <p v-if="!editable" class="meta">by {{ strip.username || 'someone' }}</p>
+    <!-- Wall only: like + comments right on the card -->
+    <div v-if="!editable" class="social">
+      <LikeButton :strip-id="strip.$id" />
+      <button type="button" :aria-expanded="showComments" @click="showComments = !showComments">
+        {{ showComments ? 'hide comments' : `comments (${commentCount})` }}
+      </button>
+    </div>
+    <CommentSection
+      v-if="!editable && showComments"
+      :strip-id="strip.$id"
+      @count="commentCount = $event"
+    />
     <p class="meta">
       {{ formatDate(strip.$createdAt) }} ·
       <span class="badge">{{ strip.isPublic ? 'on the wall' : 'private' }}</span>
@@ -75,5 +103,10 @@ function formatDate(iso) {
   gap: 8px;
   color: inherit;
   text-decoration: none;
+}
+
+.social {
+  display: flex;
+  gap: 8px;
 }
 </style>

@@ -5,6 +5,8 @@ import { useStrips, imageUrl } from '@/composables/useStrips'
 import { useAuth } from '@/composables/useAuth'
 import { useReports } from '@/composables/useReports'
 import ReportDialog from '@/components/ReportDialog.vue'
+import LikeButton from '@/components/LikeButton.vue'
+import CommentSection from '@/components/CommentSection.vue'
 
 const route = useRoute()
 const { getStrip } = useStrips()
@@ -79,6 +81,8 @@ function formatDate(iso) {
         <h1>{{ strip.caption || 'untitled strip' }}</h1>
         <p>by {{ strip.username || 'someone' }} · {{ formatDate(strip.$createdAt) }}</p>
         <a :href="imageUrl(strip.imageId)" target="_blank" rel="noopener">open full size</a>
+        <LikeButton :strip-id="strip.$id" />
+        <CommentSection :strip-id="strip.$id" />
         <!-- Report (not on your own strips) -->
         <p v-if="reported" role="status">thanks, an admin will take a look ♥</p>
         <button v-else-if="strip.userId !== user?.$id" @click="reporting = true">report</button>
