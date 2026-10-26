@@ -10,7 +10,7 @@ const props = defineProps({
   editable: { type: Boolean, default: false }, // true in my gallery, false on the wall
 })
 
-defineEmits(['edit', 'delete'])
+defineEmits(['edit', 'delete', 'toggle-public'])
 const showComments = ref(false) // comments open/closed on this card
 const commentCount = ref(0)
 
@@ -56,6 +56,9 @@ function formatDate(iso) {
       <span class="badge">{{ strip.isPublic ? 'on the wall' : 'private' }}</span>
     </p>
     <div v-if="editable" class="actions">
+      <button @click="$emit('toggle-public', strip)">
+        {{ strip.isPublic ? 'make private' : 'post to wall ♥' }}
+      </button>
       <button :aria-label="`edit ${strip.caption || 'strip'}`" @click="$emit('edit', strip)">
         edit
       </button>

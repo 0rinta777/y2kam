@@ -23,6 +23,17 @@ const reporting = ref(false) // dialog open?
 const sending = ref(false)
 const reportError = ref('')
 const reported = ref(false)
+// Copy this strip's link to the clipboard
+const copied = ref(false)
+async function copyLink() {
+  try {
+    await navigator.clipboard.writeText(window.location.href)
+    copied.value = true
+    setTimeout(() => (copied.value = false), 2000)
+  } catch (e) {
+    console.error('copy failed:', e)
+  }
+}
 
 async function sendReport({ reason, note }) {
   sending.value = true
@@ -81,6 +92,9 @@ function formatDate(iso) {
         <h1>{{ strip.caption || 'untitled strip' }}</h1>
         <p>by {{ strip.username || 'someone' }} · {{ formatDate(strip.$createdAt) }}</p>
         <a :href="imageUrl(strip.imageId)" target="_blank" rel="noopener">open full size</a>
+        <button type="button" @click="copyLink">
+          {{ copied ? 'link copied ♥' : 'copy link' }}
+        </button>
         <LikeButton :strip-id="strip.$id" />
         <CommentSection :strip-id="strip.$id" />
         <!-- Report (not on your own strips) -->

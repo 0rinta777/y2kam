@@ -39,6 +39,17 @@ async function saveEdit(changes) {
   }
 }
 
+// Quick publish / unpublish without opening the edit popup
+async function togglePublic(strip) {
+  try {
+    await updateStrip(strip, { caption: strip.caption, isPublic: !strip.isPublic })
+    showMessage(strip.isPublic ? 'now private' : 'posted to the wall ♥')
+  } catch (e) {
+    console.error('toggle failed:', e)
+    showMessage("couldn't change it. try again.")
+  }
+}
+
 // DELETE
 async function remove(strip) {
   const name = strip.caption || 'this strip'
@@ -87,6 +98,7 @@ async function remove(strip) {
         editable
         @edit="openEdit"
         @delete="remove"
+        @toggle-public="togglePublic"
       />
     </div>
 
