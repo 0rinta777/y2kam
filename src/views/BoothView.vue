@@ -5,8 +5,9 @@ import { useAuth } from '@/composables/useAuth'
 import { useStrips } from '@/composables/useStrips'
 import { useCatalog, fileUrl } from '@/composables/useCatalog'
 import { toCss } from '@/lib/filters'
-import { buildStrip, canvasToBlob } from '@/lib/strip'
+import { buildStrip } from '@/lib/strip'
 import OptionPicker from '@/components/OptionPicker.vue'
+import { useRouter } from 'vue-router'
 
 const { videoEl, error, starting, isOn, start, stop, capture } = useCamera()
 const { isLoggedIn } = useAuth()
@@ -14,7 +15,43 @@ const { createStrip } = useStrips()
 const { items: catalog, loadActive } = useCatalog()
 
 // Load the active filters and frames the admin made
-onMounted(loadActive)
+const router = useRouter()
+const PENDING_KEY = 'y2kam-pending-strip'
+const restored = ref(false) // true when a strip came back after login
+
+onMounted(() => {
+  loadActive()
+  restorePending()
+})
+
+// After login: bring back the strip the guest took before logging in
+function restorePending() {
+  if (!isLoggedIn.value) return
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(PENDING_KEY))
+    if (!saved) return
+    stripUrl.value = saved.url
+    usedFilter.value = saved.filter
+    step.value = 'done'
+    restored.value = true
+    sessionStorage.removeItem(PENDING_KEY)
+  } catch (e) {
+    console.error('restore failed:', e)
+  }
+}
+
+// Guest clicks "log in to save": keep the strip in this tab, then go to login
+function keepForLogin() {
+  try {
+    sessionStorage.setItem(
+      PENDING_KEY,
+      JSON.stringify({ url: stripUrl.value, filter: usedFilter.value }),
+    )
+  } catch (e) {
+    console.error('could not keep strip:', e)
+  }
+  router.push('/login?redirect=/booth')
+}
 
 // "none" options always exist, the rest come from Appwrite
 const NO_FILTER = { id: 'none', name: 'none', css: 'none' }
@@ -43,6 +80,7 @@ const photosTaken = ref(0)
 const flash = ref(false)
 const stripCanvas = ref(null)
 const stripUrl = ref('')
+const usedFilter = ref('') // filter name of the finished strip
 
 // Saving
 const caption = ref('')
@@ -78,6 +116,7 @@ async function takePhotos() {
     await sleep(500)
   }
 
+  usedFilter.value = filter.value.name
   stripCanvas.value = await buildStrip(photos, frame.value.url)
   stripUrl.value = stripCanvas.value.toDataURL('image/jpeg', 0.9)
   stop()
@@ -88,8 +127,9 @@ async function save() {
   saving.value = true
   saveError.value = ''
   try {
-    const blob = await canvasToBlob(stripCanvas.value)
-    await createStrip(blob, { caption: caption.value.trim(), filter: filter.value.name })
+    // Turn the strip image back into a file (works for new AND restored strips)
+    const blob = await (await fetch(stripUrl.value)).blob()
+    await createStrip(blob, { caption: caption.value.trim(), filter: usedFilter.value })
     saved.value = true
   } catch (e) {
     console.error('save failed:', e)
@@ -105,6 +145,7 @@ async function retake() {
   caption.value = ''
   saved.value = false
   saveError.value = ''
+  restored.value = false
   await openCamera()
 }
 </script>
@@ -153,6 +194,7 @@ async function retake() {
         </template>
 
         <template v-else-if="isLoggedIn">
+          <p v-if="restored" role="status">welcome back ♥ your strip is ready to save</p>
           <label>
             caption
             <input v-model="caption" maxlength="120" placeholder="besties at the mall <3" />
@@ -166,7 +208,7 @@ async function retake() {
 
         <template v-else>
           <p>log in to save strips to your gallery</p>
-          <RouterLink to="/login?redirect=/booth">log in or sign up</RouterLink>
+          <button @click="keepForLogin">log in or sign up to save it</button>
           <button @click="retake">retake</button>
         </template>
 
