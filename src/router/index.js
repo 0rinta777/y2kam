@@ -51,6 +51,13 @@ const routes = [
     meta: { requiresAuth: true, title: 'my gallery' },
   },
 
+  {
+    path: '/settings',
+    name: 'settings',
+    component: () => import('@/views/SettingsView.vue'),
+    meta: { requiresAuth: true, title: 'settings' },
+  },
+
   // Admin login page (public, so admins can reach it)
   {
     path: '/admin/login',

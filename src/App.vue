@@ -19,6 +19,7 @@ async function onLogout() {
 
     <!-- Only shown when logged in -->
     <RouterLink v-if="isLoggedIn" to="/gallery">my gallery</RouterLink>
+    <RouterLink v-if="isLoggedIn" to="/settings">settings</RouterLink>
     <!-- Only shown to admins -->
     <RouterLink v-if="isAdmin" to="/admin">admin</RouterLink>
 
