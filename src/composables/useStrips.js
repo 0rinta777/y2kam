@@ -53,9 +53,36 @@ export function useStrips() {
     ])
   }
 
-  // READ: public strips for the wall
-  function loadPublic() {
-    return load([Query.equal('isPublic', true), Query.orderDesc('$createdAt'), Query.limit(50)])
+  // READ: public strips for the wall, 12 at a time (pagination)
+  const PAGE_SIZE = 12
+  const hasMore = ref(false)
+  const loadingMore = ref(false)
+  const publicQueries = [Query.equal('isPublic', true), Query.orderDesc('$createdAt')]
+
+  async function loadPublic() {
+    await load([...publicQueries, Query.limit(PAGE_SIZE)])
+    hasMore.value = strips.value.length === PAGE_SIZE
+  }
+
+  // Load the next 12, starting after the last strip we already have
+  async function loadMorePublic() {
+    const last = strips.value[strips.value.length - 1]
+    if (!last) return
+    loadingMore.value = true
+    try {
+      const res = await tablesDB.listRows({
+        databaseId: DB_ID,
+        tableId: TABLE,
+        queries: [...publicQueries, Query.cursorAfter(last.$id), Query.limit(PAGE_SIZE)],
+      })
+      strips.value.push(...res.rows)
+      hasMore.value = res.rows.length === PAGE_SIZE
+    } catch (e) {
+      console.error('load more failed:', e)
+      error.value = "couldn't load more strips. try again."
+    } finally {
+      loadingMore.value = false
+    }
   }
 
   // READ: one strip by its ID (for the detail page)
@@ -122,8 +149,11 @@ export function useStrips() {
     strips,
     loading,
     error,
+    hasMore,
+    loadingMore,
     loadMine,
     loadPublic,
+    loadMorePublic,
     getStrip,
     createStrip,
     updateStrip,
