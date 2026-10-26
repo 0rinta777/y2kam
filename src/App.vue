@@ -1,6 +1,7 @@
 <script setup>
 import { useRouter } from 'vue-router'
 import { useAuth } from '@/composables/useAuth'
+import NotificationBell from '@/components/NotificationBell.vue'
 
 const { user, isLoggedIn, isAdmin, logout } = useAuth()
 const router = useRouter()
@@ -22,6 +23,7 @@ async function onLogout() {
     <RouterLink v-if="isLoggedIn" to="/gallery">my gallery</RouterLink>
     <RouterLink v-if="isLoggedIn" to="/settings">settings</RouterLink>
     <RouterLink v-if="isLoggedIn" :to="`/u/${user.$id}`">my profile</RouterLink>
+    <NotificationBell v-if="isLoggedIn" />
     <!-- Only shown to admins -->
     <RouterLink v-if="isAdmin" to="/admin">admin</RouterLink>
 
