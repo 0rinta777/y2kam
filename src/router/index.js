@@ -32,12 +32,24 @@ const routes = [
     component: () => import('@/views/admin/AdminLoginView.vue'),
   },
 
-  // Admins only
+  // Admins only: one layout (sidebar) with the admin pages inside it
   {
     path: '/admin',
-    name: 'admin',
-    component: () => import('@/views/admin/AdminDashboardView.vue'),
+    component: () => import('@/views/admin/AdminLayout.vue'),
     meta: { requiresAdmin: true },
+    children: [
+      { path: '', name: 'admin', component: () => import('@/views/admin/AdminDashboardView.vue') },
+      {
+        path: 'catalog',
+        name: 'admin-catalog',
+        component: () => import('@/views/admin/AdminCatalogView.vue'),
+      },
+      {
+        path: 'reports',
+        name: 'admin-reports',
+        component: () => import('@/views/admin/AdminReportsView.vue'),
+      },
+    ],
   },
 ]
 
