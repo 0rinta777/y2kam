@@ -17,6 +17,11 @@ const routes = [
   },
   { path: '/login', name: 'login', component: () => import('@/views/LoginView.vue') },
 
+  {
+    path: '/reset-password',
+    name: 'reset-password',
+    component: () => import('@/views/ResetPasswordView.vue'),
+  },
   // Logged-in users only
   {
     path: '/gallery',

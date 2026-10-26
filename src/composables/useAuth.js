@@ -52,9 +52,30 @@ async function logout() {
   isAdmin.value = false
 }
 
+// Send a password reset email with a link back to our /reset-password page
+async function sendRecovery(email) {
+  await account.createRecovery({ email, url: `${window.location.origin}/reset-password` })
+}
+
+// Set a new password using the userId + secret from the email link
+async function resetPassword(userId, secret, password) {
+  await account.updateRecovery({ userId, secret, password })
+}
+
 // The composable: components call useAuth() to get the user and auth functions
 export function useAuth() {
   // true when someone is logged in (!! turns the user object into true/false)
   const isLoggedIn = computed(() => !!user.value)
-  return { user, isAdmin, isLoggedIn, ready, loadUser, login, register, logout }
+  return {
+    user,
+    isAdmin,
+    isLoggedIn,
+    ready,
+    loadUser,
+    login,
+    register,
+    logout,
+    sendRecovery,
+    resetPassword,
+  }
 }
