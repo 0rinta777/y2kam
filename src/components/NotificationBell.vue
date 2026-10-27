@@ -53,36 +53,65 @@ function toggle() {
 .bell {
   position: relative;
 }
+.bell > button {
+  min-height: 40px;
+  padding: 6px 14px;
+}
 .count {
-  padding: 1px 6px;
+  padding: 1px 7px;
   border-radius: 999px;
-  background: #c0145b;
-  color: white;
+  background: #ff8fc8;
+  color: #12051f;
   font-size: 12px;
+  font-weight: 700;
 }
 .panel {
   position: absolute;
   right: 0;
-  z-index: 10;
+  top: calc(100% + 8px);
+  z-index: 30;
   width: 320px;
   max-width: 90vw;
   max-height: 60vh;
   overflow-y: auto;
-  padding: 12px;
-  border: 1px solid #ddd;
-  border-radius: 12px;
-  background: white;
+  padding: 16px;
+  color: #eadcff;
+  background: #1e0838;
+  border: 1.5px solid rgba(215, 184, 255, 0.45);
+  border-radius: 20px;
+  box-shadow: 0 0 30px rgba(157, 77, 230, 0.45);
 }
 .panel ul {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
+.panel li {
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(215, 184, 255, 0.15);
+}
+.panel li:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+.panel a {
+  color: #ffffff;
+  text-decoration: none;
+}
+.panel a:hover {
+  text-decoration: underline;
+}
 .panel small {
   display: block;
   opacity: 0.7;
+}
+@media (max-width: 900px) {
+  .panel {
+    left: 0;
+    right: auto;
+  }
 }
 </style>

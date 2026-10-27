@@ -1,18 +1,340 @@
+/* =========================================================
+   y2kam global styles — based on the Figma "purple scene" design
+   Colours, fonts, buttons, inputs and base elements for every page.
+   ========================================================= */
+
+:root {
+  /* Colours (purple ramp from the design) */
+  --deep: #12051f;
+  --dark: #2e0b57;
+  --purple: #6a1fc0;
+  --purple-mid: #a35ce6;
+  --violet: #b763ea;
+  --lilac: #d7b8ff;
+  --text: #eadcff;
+  --white: #ffffff;
+  --pink: #ff8fc8;
+  --green: #b3efbd;
+
+  /* Surfaces */
+  --glass: rgba(18, 5, 31, 0.6);
+  --card: rgba(30, 8, 56, 0.74);
+  --card-solid: #1e0838;
+  --card-border: rgba(215, 184, 255, 0.45);
+  --input-bg: rgba(18, 5, 31, 0.7);
+
+  /* Shapes + effects */
+  --radius-card: 24px;
+  --radius-input: 14px;
+  --radius-pill: 999px;
+  --glow: 0 0 12px rgba(199, 125, 255, 0.75);
+  --glow-soft: 0 0 30px rgba(157, 77, 230, 0.35);
+
+  /* Fonts */
+  --font-display: 'Shrikhand', cursive;
+  --font-body: 'Inter', system-ui, sans-serif;
+
+  color-scheme: dark;
+}
+
+/* ---------- Page ---------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
-  font-family: system-ui, sans-serif;
+  min-height: 100vh;
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--text);
+  background:
+    radial-gradient(900px 600px at 20% -10%, rgba(176, 108, 240, 0.55), transparent 65%),
+    linear-gradient(160deg, #7b3fc4 0%, #4a1590 40%, #2e0b57 70%, var(--deep) 100%);
+  background-attachment: fixed;
 }
 
-nav {
-  display: flex;
-  gap: 16px;
-  padding: 16px;
+img {
+  max-width: 100%;
 }
 
+/* ---------- Text ---------- */
+h1,
+h2 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  line-height: 1.15;
+  color: var(--white);
+  margin: 0 0 8px;
+}
+
+h1 {
+  font-size: clamp(34px, 6vw, 52px);
+  background: linear-gradient(180deg, var(--white), var(--lilac));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 12px rgba(199, 125, 255, 0.6));
+}
+
+h2 {
+  font-size: clamp(22px, 3.5vw, 30px);
+}
+
+h3 {
+  font-weight: 600;
+  color: var(--white);
+}
+
+p {
+  margin: 0 0 8px;
+}
+
+small {
+  color: rgba(234, 220, 255, 0.75);
+}
+
+strong {
+  color: var(--white);
+}
+
+a {
+  color: var(--lilac);
+  text-underline-offset: 3px;
+}
+
+a:hover {
+  color: var(--white);
+}
+
+/* Messages */
+[role='alert'] {
+  color: var(--pink);
+}
+
+[role='status'] {
+  color: var(--green);
+}
+
+/* Keyboard focus is always visible */
+:focus-visible {
+  outline: 2px solid var(--pink);
+  outline-offset: 3px;
+}
+
+/* ---------- Buttons ----------
+   Default = secondary (dark pill with lilac border)
+   type="submit" or .btn-primary = glossy purple pill */
+button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px; /* big enough to tap on phones */
+  padding: 10px 22px;
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--white);
+  background: var(--input-bg);
+  border: 2px solid var(--lilac);
+  border-radius: var(--radius-pill);
+  box-shadow: 0 0 7px rgba(189, 153, 242, 0.35);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    box-shadow 0.15s,
+    transform 0.1s;
+}
+
+button:hover:not(:disabled) {
+  background: rgba(163, 92, 230, 0.35);
+  box-shadow: var(--glow);
+}
+
+button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Selected option (filters, tabs, toggles) */
+button[aria-pressed='true'] {
+  background: linear-gradient(180deg, #d08bff 0%, #b763ea 50%, #7b2fc9 100%);
+  border-color: rgba(255, 255, 255, 0.6);
+  box-shadow: var(--glow);
+}
+
+/* Primary: glossy purple pill */
+button[type='submit'],
+.btn-primary {
+  overflow: hidden;
+  padding: 12px 30px;
+  font-size: 16px;
+  background: linear-gradient(180deg, #d08bff 0%, #b763ea 50%, #7b2fc9 100%);
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  box-shadow: var(--glow);
+}
+
+/* The shiny "gloss" on top of primary buttons */
+button[type='submit']::before,
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 8px;
+  right: 8px;
+  height: 45%;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.05));
+  pointer-events: none;
+}
+
+button[type='submit']:hover:not(:disabled),
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(180deg, #dda3ff 0%, #c27aef 50%, #8a3ad8 100%);
+}
+
+/* Links that look like a primary button (e.g. "start") */
+a.btn-primary {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  color: var(--white);
+  font-weight: 700;
+  text-decoration: none;
+  border-radius: var(--radius-pill);
+}
+
+/* ---------- Forms ---------- */
 form {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  max-width: 320px;
-  padding: 16px;
+  max-width: 480px;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-weight: 600;
+  font-size: 14px;
+  color: var(--text);
+}
+
+/* Checkbox / radio labels sit on one line */
+label:has(> input[type='checkbox']),
+label:has(> input[type='radio']) {
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  font-weight: 500;
+  font-size: 15px;
+}
+
+input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']),
+textarea,
+select {
+  width: 100%;
+  padding: 12px 16px;
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--white);
+  background: var(--input-bg);
+  border: 1.5px solid rgba(215, 184, 255, 0.3);
+  border-radius: var(--radius-input);
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+
+input:focus,
+textarea:focus,
+select:focus {
+  outline: none;
+  border-color: var(--violet);
+  box-shadow: 0 0 0 3px rgba(183, 99, 234, 0.35);
+}
+
+input[aria-invalid='true'],
+textarea[aria-invalid='true'] {
+  border-color: var(--pink);
+}
+
+::placeholder {
+  color: rgba(205, 184, 255, 0.55);
+}
+
+input[type='checkbox'],
+input[type='radio'],
+input[type='range'] {
+  accent-color: var(--violet);
+}
+
+input[type='checkbox'],
+input[type='radio'] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+
+input[type='file'] {
+  font-family: var(--font-body);
+  color: var(--text);
+}
+
+input[type='file']::file-selector-button {
+  margin-right: 12px;
+  padding: 8px 16px;
+  font-family: var(--font-body);
+  font-weight: 700;
+  color: var(--white);
+  background: var(--input-bg);
+  border: 2px solid var(--lilac);
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+}
+
+fieldset {
+  margin: 0;
+  padding: 12px 16px;
+  border: 1.5px solid rgba(215, 184, 255, 0.25);
+  border-radius: 16px;
+}
+
+legend {
+  padding: 0 6px;
+  font-weight: 600;
+  color: var(--white);
+}
+
+/* ---------- Reusable pieces ---------- */
+.card {
+  padding: 20px;
+  background: var(--card);
+  border: 1.5px solid var(--card-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--glow-soft);
+  backdrop-filter: blur(12px);
+}
+
+/* Hidden visually, still read by screen readers */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
 }
