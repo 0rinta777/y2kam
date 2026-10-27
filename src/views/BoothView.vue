@@ -1,5 +1,6 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { useRouter } from 'vue-router'
 import { useCamera } from '@/composables/useCamera'
 import { useAuth } from '@/composables/useAuth'
 import { useStrips } from '@/composables/useStrips'
@@ -7,31 +8,75 @@ import { useCatalog, fileUrl } from '@/composables/useCatalog'
 import { toCss } from '@/lib/filters'
 import { buildStrip } from '@/lib/strip'
 import OptionPicker from '@/components/OptionPicker.vue'
-import { useRouter } from 'vue-router'
 
+const router = useRouter()
 const { videoEl, error, starting, isOn, start, stop, capture } = useCamera()
 const { isLoggedIn } = useAuth()
 const { createStrip } = useStrips()
 const { items: catalog, loadActive } = useCatalog()
 
-// Load the active filters and frames the admin made
-const router = useRouter()
+// --- Filters and frames from Appwrite ---
+const NO_FILTER = { id: 'none', name: 'none', css: 'none' }
+const NO_FRAME = { id: 'none', name: 'no frame', url: null }
+
+const filters = computed(() => [
+  NO_FILTER,
+  ...catalog.value
+    .filter((item) => item.type === 'filter')
+    .map((item) => ({ id: item.$id, name: item.name, css: toCss(item.settings) })),
+])
+
+const frames = computed(() => [
+  NO_FRAME,
+  ...catalog.value
+    .filter((item) => item.type === 'frame' && item.fileId)
+    .map((item) => ({ id: item.$id, name: item.name, url: fileUrl(item.fileId) })),
+])
+
+// --- Booth state ---
+const PHOTO_COUNT = 4
+const filter = ref(NO_FILTER)
+const frame = ref(NO_FRAME)
+const step = ref('idle') // idle → ready → shooting → done
+const countdown = ref(0)
+const photosTaken = ref(0)
+const flash = ref(false)
+const stripCanvas = ref(null)
+const stripUrl = ref('')
+const usedFilter = ref('') // filter name of the finished strip
+const shootError = ref('') // shown if something goes wrong while shooting
+
+// --- Saving ---
+const caption = ref('')
+const saving = ref(false)
+const saveError = ref('')
+const saved = ref(false)
+
+// --- Guest strip kept through login ---
 const PENDING_KEY = 'y2kam-pending-strip'
-const restored = ref(false) // true when a strip came back after login
+const restored = ref(false)
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 onMounted(() => {
   loadActive()
   restorePending()
 })
 
+// If you leave the page mid-countdown, the shooting loop stops
+let cancelled = false
+onBeforeUnmount(() => {
+  cancelled = true
+})
+
 // After login: bring back the strip the guest took before logging in
 function restorePending() {
   if (!isLoggedIn.value) return
   try {
-    const saved = JSON.parse(sessionStorage.getItem(PENDING_KEY))
-    if (!saved) return
-    stripUrl.value = saved.url
-    usedFilter.value = saved.filter
+    const pending = JSON.parse(sessionStorage.getItem(PENDING_KEY))
+    if (!pending) return
+    stripUrl.value = pending.url
+    usedFilter.value = pending.filter
     step.value = 'done'
     restored.value = true
     sessionStorage.removeItem(PENDING_KEY)
@@ -53,74 +98,50 @@ function keepForLogin() {
   router.push('/login?redirect=/booth')
 }
 
-// "none" options always exist, the rest come from Appwrite
-const NO_FILTER = { id: 'none', name: 'none', css: 'none' }
-const NO_FRAME = { id: 'none', name: 'no frame', url: null }
-
-const filters = computed(() => [
-  NO_FILTER,
-  ...catalog.value
-    .filter((item) => item.type === 'filter')
-    .map((item) => ({ id: item.$id, name: item.name, css: toCss(item.settings) })),
-])
-
-const frames = computed(() => [
-  NO_FRAME,
-  ...catalog.value
-    .filter((item) => item.type === 'frame' && item.fileId)
-    .map((item) => ({ id: item.$id, name: item.name, url: fileUrl(item.fileId) })),
-])
-
-const PHOTO_COUNT = 4
-const filter = ref(NO_FILTER) // the chosen filter
-const frame = ref(NO_FRAME) // the chosen frame
-const step = ref('idle') // idle → ready → shooting → done
-const countdown = ref(0)
-const photosTaken = ref(0)
-const flash = ref(false)
-const stripCanvas = ref(null)
-const stripUrl = ref('')
-const usedFilter = ref('') // filter name of the finished strip
-
-// Saving
-const caption = ref('')
-const saving = ref(false)
-const saveError = ref('')
-const saved = ref(false)
-
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
-
 async function openCamera() {
   await start()
   if (isOn.value) step.value = 'ready'
 }
 
-// Countdown, take 4 photos, build the strip (with the frame on top)
+// Countdown, take 4 photos, build the strip.
+// try/catch/finally: whatever happens, the camera turns off and the booth never gets stuck.
 async function takePhotos() {
   step.value = 'shooting'
+  shootError.value = ''
   photosTaken.value = 0
   const photos = []
 
-  for (let i = 0; i < PHOTO_COUNT; i++) {
-    for (let n = 3; n > 0; n--) {
-      countdown.value = n
-      await sleep(1000)
+  try {
+    for (let i = 0; i < PHOTO_COUNT; i++) {
+      for (let n = 3; n > 0; n--) {
+        if (cancelled) return
+        countdown.value = n
+        await sleep(1000)
+      }
+      if (cancelled) return
+      countdown.value = 0
+      photos.push(capture(filter.value.css))
+      photosTaken.value = i + 1
+
+      flash.value = true
+      await sleep(150)
+      flash.value = false
+      await sleep(500)
     }
+
+    usedFilter.value = filter.value.name
+    stripCanvas.value = await buildStrip(photos, frame.value.url)
+    stripUrl.value = stripCanvas.value.toDataURL('image/jpeg', 0.9)
+    step.value = 'done'
+  } catch (e) {
+    console.error('shooting failed:', e)
+    shootError.value = 'something went wrong while taking your photos. try again ♥'
+    step.value = 'idle'
+  } finally {
     countdown.value = 0
-    photos.push(capture(filter.value.css))
-    photosTaken.value = i + 1
-
-    flash.value = true
-    await sleep(150)
     flash.value = false
-    await sleep(500)
+    stop() // camera off in every case: finished, failed or cancelled
   }
-
-  usedFilter.value = filter.value.name
-  stripCanvas.value = await buildStrip(photos, frame.value.url)
-  stripUrl.value = stripCanvas.value.toDataURL('image/jpeg', 0.9)
-  stop()
-  step.value = 'done'
 }
 
 async function save() {
@@ -145,6 +166,7 @@ async function retake() {
   caption.value = ''
   saved.value = false
   saveError.value = ''
+  shootError.value = ''
   restored.value = false
   await openCamera()
 }
@@ -168,6 +190,7 @@ async function retake() {
         {{ starting ? 'starting camera…' : 'start camera' }}
       </button>
       <p v-if="error" role="alert">{{ error }}</p>
+      <p v-if="shootError" role="alert">{{ shootError }}</p>
     </section>
 
     <!-- Step 2: pick a filter and frame, then shoot -->

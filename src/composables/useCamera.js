@@ -1,4 +1,4 @@
-import { ref, computed, onBeforeUnmount } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
 
 export function useCamera() {
   const videoEl = ref(null) // connected to the <video> in the template
@@ -19,7 +19,8 @@ export function useCamera() {
       videoEl.value.srcObject = stream.value
       await videoEl.value.play()
     } catch (e) {
-      // NotAllowedError = the user (or browser) blocked the camera
+      // If we got the camera but something after that failed, turn it off again
+      stop()
       error.value =
         e.name === 'NotAllowedError'
           ? 'camera access was blocked. allow it in your browser settings and try again ♥'
@@ -33,12 +34,15 @@ export function useCamera() {
   function stop() {
     stream.value?.getTracks().forEach((track) => track.stop())
     stream.value = null
+    if (videoEl.value) videoEl.value.srcObject = null
   }
 
   // Take a photo: copy the current video frame onto a canvas,
   // mirrored like a selfie, with the chosen filter applied
   function capture(filter = 'none') {
     const video = videoEl.value
+    // Don't capture from a camera that isn't ready (or was turned off)
+    if (!video || !stream.value || !video.videoWidth) throw new Error('camera not ready')
     const canvas = document.createElement('canvas')
     canvas.width = video.videoWidth
     canvas.height = video.videoHeight
