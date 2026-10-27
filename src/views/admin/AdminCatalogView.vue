@@ -161,48 +161,95 @@ async function remove(item) {
 <style scoped>
 .top {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
+}
+.top h1 {
+  margin-bottom: 0 !important;
+}
+/* "+ add new" = flat purple */
+.top > button {
+  background: #9b4fe0 !important;
+  border-color: #9b4fe0 !important;
 }
 .tabs {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
-  margin-bottom: 16px;
+  margin: 20px 0 16px;
 }
-.tabs button[aria-pressed='true'] {
-  font-weight: bold;
-}
+/* Table in a card */
 table {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
+  overflow: hidden;
+  background: rgba(28, 11, 51, 0.92);
+  border: 1px solid rgba(215, 184, 255, 0.14);
+  border-radius: 18px;
+
 }
 th,
 td {
-  padding: 8px;
+  padding: 12px 14px;
   text-align: left;
-  border-bottom: 1px solid #eee;
+  vertical-align: middle;
+  border-bottom: 1px solid rgba(215, 184, 255, 0.1);
+}
+th {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #d7b8ff;
+  background: #140726;
+}
+tbody tr:last-child td {
+  border-bottom: none;
+}
+tbody tr:hover td {
+  background: rgba(183, 99, 234, 0.06);
 }
 .swatch {
   width: 48px;
   height: 48px;
-  border-radius: 8px;
+  border-radius: 10px;
   background: linear-gradient(135deg, #ff8fc8, #9b4fe0, #3dadff);
 }
 .thumb {
   height: 64px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.06);
 }
 .actions {
   display: flex;
   gap: 8px;
 }
-.toast {
-  padding: 8px 12px;
-  border-radius: 8px;
-  background: #eee;
+/* delete = pink outline */
+.actions button:last-child {
+  color: #ffd3ea;
+  background: transparent;
+  border-color: rgba(255, 143, 200, 0.7);
 }
 .empty {
-  padding: 40px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 56px 24px;
   text-align: center;
+  background: rgba(28, 11, 51, 0.92);
+  border: 1px solid rgba(215, 184, 255, 0.14);
+  border-radius: 18px;
+
+}
+.empty p {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: 26px;
+  color: #ffffff;
 }
 .sr-only {
   position: absolute;
@@ -210,5 +257,12 @@ td {
   height: 1px;
   overflow: hidden;
   clip: rect(0 0 0 0);
+}
+/* Small screens: the table can scroll sideways */
+@media (max-width: 700px) {
+  table {
+    display: block;
+    overflow-x: auto;
+  }
 }
 </style>

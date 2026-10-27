@@ -61,8 +61,10 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 onMounted(() => {
   loadActive()
   restorePending()
+  // No start screen: the camera turns on straight away
+  // (unless a saved guest strip was just brought back)
+  if (step.value === 'idle') openCamera()
 })
-
 // If you leave the page mid-countdown, the shooting loop stops
 let cancelled = false
 onBeforeUnmount(() => {
@@ -100,6 +102,8 @@ function keepForLogin() {
 
 async function openCamera() {
   await start()
+  // Left the page while the camera was still starting? Turn it off again.
+  if (cancelled) return stop()
   if (isOn.value) step.value = 'ready'
 }
 
@@ -177,27 +181,30 @@ async function retake() {
     <h1>booth</h1>
 
     <!-- Camera view. Always in the page (v-show) so useCamera can reach the <video> -->
-    <div v-show="step === 'ready' || step === 'shooting'" class="camera">
+    <div
+      v-show="step === 'ready' || step === 'shooting' || starting"
+      class="camera"
+      :class="{ loading: starting }"
+    >
       <video ref="videoEl" playsinline muted :style="{ filter: filter.css }" />
+      <p v-if="starting" class="camera-msg">starting camera… ♥</p>
       <div v-if="countdown" class="countdown" aria-live="assertive">{{ countdown }}</div>
       <div v-if="flash" class="flash" />
     </div>
 
-    <!-- Step 1: start -->
-    <section v-if="step === 'idle'">
-      <p>4 photos, 3 seconds each. strike a pose ♥</p>
-      <button :disabled="starting" @click="openCamera">
-        {{ starting ? 'starting camera…' : 'start camera' }}
-      </button>
+    <!-- Step 1: the camera is starting by itself. Only if it fails: a "try again" button -->
+    <section v-if="step === 'idle' && !starting">
+      <p>the camera is off</p>
+      <button @click="openCamera">try again</button>
       <p v-if="error" role="alert">{{ error }}</p>
       <p v-if="shootError" role="alert">{{ shootError }}</p>
     </section>
 
     <!-- Step 2: pick a filter and frame, then shoot -->
-    <section v-if="step === 'ready'">
+    <section v-if="step === 'ready' || starting">
       <OptionPicker v-model="filter" label="filter" :options="filters" />
       <OptionPicker v-model="frame" label="frame" :options="frames" />
-      <button @click="takePhotos">take photos</button>
+      <button :disabled="step !== 'ready'" @click="takePhotos">take photos</button>
     </section>
 
     <!-- Step 3: shooting -->
@@ -207,6 +214,7 @@ async function retake() {
 
     <!-- Step 4: result -->
     <section v-if="step === 'done'" class="result">
+      <h2>your strip is ready!</h2>
       <img :src="stripUrl" alt="your photo strip" class="strip" />
 
       <div class="actions">
@@ -242,53 +250,276 @@ async function retake() {
 </template>
 
 <style scoped>
+/* One centred column, like the Figma booth */
 .booth {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 16px;
-  max-width: 720px;
+  align-items: center;
+  gap: 22px;
+  max-width: 900px;
+  margin: 0 auto;
+  text-align: center;
 }
+
+/* ---- Step 1: before the camera starts ----
+   Looks like the camera screen, with the start button inside */
+.booth > section:not(.result):has(> p) {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  padding: 32px 24px;
+  background: linear-gradient(135deg, #3a0f78 0%, #1a0633 60%, #12051f 100%);
+  border: 6px solid #ffffff;
+  border-radius: 32px;
+  box-shadow:
+    0 0 26px rgba(199, 125, 255, 0.75),
+    inset 0 0 40px rgba(0, 0, 0, 0.35);
+}
+.booth > section:not(.result) > p {
+  margin: 0;
+  font-size: clamp(17px, 2.4vw, 22px);
+  font-weight: 500;
+  color: #ffffff;
+}
+.booth > section:not(.result) > p[role='alert'] {
+  max-width: 480px;
+  font-size: 15px;
+  color: #ff8fc8;
+}
+
+/* ---- Camera ---- */
 .camera {
   position: relative;
   width: 100%;
-  max-width: 640px;
 }
 .camera video {
+  display: block;
   width: 100%;
-  border-radius: 16px;
-  background: #000;
+  /* no cropping: you see exactly what the photo will show */
+  background: linear-gradient(135deg, #3a0f78 0%, #1a0633 60%, #12051f 100%);
+  border: 6px solid #ffffff;
+  border-radius: 32px;
+  box-shadow:
+    0 0 26px rgba(199, 125, 255, 0.75),
+    inset 0 0 40px rgba(0, 0, 0, 0.35);
   transform: scaleX(-1);
 }
+/* While the camera is starting: message in the middle of the frame */
+.camera-msg {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  margin: 0;
+  font-size: clamp(17px, 2.4vw, 22px);
+  font-weight: 600;
+  color: #ffffff;
+}
+/* 3, 2, 1 in the logo font */
 .countdown {
   position: absolute;
   inset: 0;
   display: grid;
   place-items: center;
-  font-size: 120px;
-  font-weight: bold;
-  color: white;
-  text-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+  font-family: var(--font-display);
+  font-size: clamp(100px, 20vw, 190px);
+  color: #ffffff;
+  text-shadow: 0 0 30px rgba(199, 125, 255, 0.95);
 }
 .flash {
   position: absolute;
   inset: 0;
-  background: white;
-  border-radius: 16px;
+  background: #ffffff;
+  border-radius: 32px;
 }
+
+/* ---- Step 2: filter + frame + take photos, under the camera ---- */
+.booth > section:not(.result):not(:has(> p)) {
+  display: flex;
+  flex-wrap: wrap; /* filter + frame side by side when there's room */
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+}
+.booth > section:not(.result):not(:has(> p)) > button {
+  flex-basis: 100%;
+  max-width: 280px;
+}
+
+/* ---- While the camera is on: everything fits on one screen, no scrolling ----
+   No title, and the camera gets whatever height is left after the nav + controls. */
+.booth:has(> .camera:not([style*='none'])) {
+  gap: 14px;
+  margin-top: -8px;
+  margin-bottom: -56px; /* skip the page's empty bottom space */
+}
+/* No visible title on the booth (screen readers still read it) */
+.booth > h1 {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.booth:has(> .camera:not([style*='none'])) .camera {
+  width: fit-content; /* frame + countdown hug the video */
+  max-width: 100%;
+}
+.booth:has(> .camera:not([style*='none'])) .camera video {
+  width: auto;
+  max-width: 100%;
+  max-height: max(220px, calc(100svh - 270px));
+  margin: 0 auto;
+}
+/* While the camera is starting: same frame size as the real camera, so nothing jumps */
+.booth:has(> .camera:not([style*='none'])) .camera.loading {
+  width: min(100%, calc((100svh - 270px) * 16 / 9));
+}
+.booth:has(> .camera:not([style*='none'])) .camera.loading video {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+}
+
+/* Main buttons: start camera, take photos */
+.booth > section:not(.result) > button {
+  overflow: hidden;
+  min-width: 200px;
+  min-height: 54px;
+  padding: 14px 40px;
+  font-size: 18px;
+  background: linear-gradient(180deg, #d08bff 0%, #b763ea 50%, #7b2fc9 100%);
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 0 16px rgba(199, 125, 255, 0.85);
+}
+.booth > section:not(.result) > button::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 8px;
+  right: 8px;
+  height: 45%;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.05));
+  pointer-events: none;
+}
+
+/* "photo 2 of 4" as a pill */
+.booth > p[aria-live] {
+  margin: 0;
+  padding: 10px 24px;
+  font-weight: 700;
+  color: #ffffff;
+  background: rgba(18, 5, 31, 0.7);
+  border: 1.5px solid rgba(215, 184, 255, 0.6);
+  border-radius: 999px;
+}
+
+/* ---- Step 3: result, like the Figma "your strip is ready!" ---- */
 .result {
   display: flex;
-  gap: 24px;
-  align-items: flex-start;
-}
-.actions {
-  display: flex;
   flex-direction: column;
-  gap: 12px;
+  align-items: center;
+  gap: 24px;
+  width: 100%;
+}
+.result h2 {
+  margin: 0;
+  font-size: clamp(32px, 5vw, 48px);
+  filter: drop-shadow(0 0 12px rgba(199, 125, 255, 0.6));
 }
 .strip {
-  width: 200px;
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  width: 260px;
+  border: 6px solid #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 0 26px rgba(199, 125, 255, 0.75);
+}
+/* Actions under the strip: caption on top, buttons in one row */
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: 620px;
+}
+.actions p,
+.actions label {
+  flex-basis: 100%;
+  margin: 0;
+}
+.actions label {
+  max-width: 420px;
+  text-align: left;
+}
+/* Save / take another / log in to save = main button */
+.actions > button:first-of-type {
+  overflow: hidden;
+  min-width: 200px;
+  min-height: 54px;
+  padding: 14px 40px;
+  font-size: 18px;
+  background: linear-gradient(180deg, #d08bff 0%, #b763ea 50%, #7b2fc9 100%);
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 0 16px rgba(199, 125, 255, 0.85);
+}
+.actions > button:first-of-type::before {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 8px;
+  right: 8px;
+  height: 45%;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.05));
+  pointer-events: none;
+}
+/* Links (download, go to my gallery) look like the dark pill buttons */
+.actions > a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 22px;
+  font-weight: 700;
+  color: #ffffff;
+  text-decoration: none;
+  background: rgba(18, 5, 31, 0.7);
+  border: 2px solid #d7b8ff;
+  border-radius: 999px;
+}
+.actions > a:hover {
+  background: rgba(163, 92, 230, 0.35);
+}
+
+/* ---- Phones ---- */
+@media (max-width: 600px) {
+  .booth:has(> .camera:not([style*='none'])) .camera video {
+    max-height: max(200px, calc(100svh - 350px));
+  }
+  .booth > section:not(.result):has(> p) {
+    aspect-ratio: 4 / 3;
+  }
+  .camera video,
+  .flash,
+  .booth > section:not(.result):has(> p) {
+    border-width: 4px;
+    border-radius: 22px;
+  }
+  .booth > section:not(.result) > button,
+  .actions > button:first-of-type {
+    width: 100%;
+  }
+  .strip {
+    width: 210px;
+  }
 }
 </style>

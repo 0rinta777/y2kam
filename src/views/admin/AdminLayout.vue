@@ -34,28 +34,131 @@ async function onLogout() {
 </template>
 
 <style scoped>
+/* Clean admin style from the Figma admin pages */
 .admin {
   display: flex;
-  min-height: 100vh;
+  min-height: calc(100vh - 160px);
+  background: linear-gradient(160deg, #24103f, #110620);
+  border: 1px solid rgba(215, 184, 255, 0.14);
+  border-radius: 24px;
+  overflow: hidden;
 }
 aside {
+  flex: none;
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  width: 220px;
-  padding: 16px;
-  border-right: 1px solid #ddd;
+  gap: 14px;
+  width: 230px;
+  padding: 24px 18px;
+  background: #140726;
+  border-right: 1px solid rgba(215, 184, 255, 0.14);
+}
+.brand {
+  margin: 0 0 8px;
+  font-family: var(--font-display);
+  font-size: 24px;
+  color: #ffffff;
 }
 aside nav {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 4px;
 }
-.active {
-  font-weight: bold;
+aside nav a {
+  padding: 10px 14px;
+  font-weight: 500;
+  color: #d7b8ff;
+  text-decoration: none;
+  border-radius: 12px;
+}
+aside nav a:hover {
+  color: #ffffff;
+  background: rgba(183, 99, 234, 0.12);
+}
+/* Current page in the sidebar */
+aside nav a.active {
+  font-weight: 600;
+  color: #ffffff;
+  background: rgba(183, 99, 234, 0.22);
+}
+aside > p {
+  margin: auto 0 0;
+  font-size: 14px;
+  color: rgba(234, 220, 255, 0.7);
+}
+aside > a {
+  font-size: 14px;
 }
 main {
   flex: 1;
-  padding: 16px;
+  min-width: 0;
+  padding: 32px;
+}
+
+/* ---- Flat buttons + headings for every admin page (inside this layout) ---- */
+main :deep(h1) {
+  margin-bottom: 20px;
+  font-size: clamp(28px, 4vw, 36px);
+  color: #ffffff;
+  background: none;
+  filter: none;
+}
+main :deep(button) {
+  min-height: 38px;
+  padding: 8px 16px;
+  font-size: 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(215, 184, 255, 0.35);
+  box-shadow: none;
+}
+main :deep(button:hover:not(:disabled)) {
+  background: rgba(183, 99, 234, 0.18);
+  box-shadow: none;
+}
+/* Primary = flat purple, no gloss */
+main :deep(button[type='submit']),
+main :deep(.primary) {
+  background: #9b4fe0;
+  border-color: #9b4fe0;
+}
+main :deep(button[type='submit']:hover:not(:disabled)),
+main :deep(.primary:hover:not(:disabled)) {
+  background: #a965ea;
+}
+main :deep(button[type='submit']::before) {
+  display: none;
+}
+main :deep(button[aria-pressed='true']) {
+  background: rgba(183, 99, 234, 0.3);
+  border-color: #b763ea;
+  box-shadow: none;
+}
+/* Delete / remove = pink outline */
+main :deep(.danger) {
+  color: #ffd3ea;
+  background: transparent;
+  border-color: rgba(255, 143, 200, 0.7);
+}
+
+/* Phones: sidebar on top */
+@media (max-width: 800px) {
+  .admin {
+    flex-direction: column;
+  }
+  aside {
+    width: auto;
+    border-right: none;
+    border-bottom: 1px solid rgba(215, 184, 255, 0.14);
+  }
+  aside nav {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+  aside > p {
+    margin: 0;
+  }
+  main {
+    padding: 20px;
+  }
 }
 </style>

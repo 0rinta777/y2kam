@@ -82,11 +82,23 @@ async function submit() {
 }
 .field-error {
   margin: 0;
-  color: #c0145b;
+  color: #ff8fc8;
 }
+/* "thank you" message, like the success toast in Figma */
 .sent {
-  padding: 16px;
-  border-radius: 12px;
-  background: #f5f0ff;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  max-width: 480px;
+  padding: 20px;
+  color: #ffffff;
+  background: rgba(30, 8, 56, 0.9);
+  border: 1.5px solid rgba(215, 184, 255, 0.7);
+  border-radius: 20px;
+  box-shadow: 0 0 12px rgba(215, 184, 255, 0.35);
+}
+.sent p {
+  margin: 0;
 }
 </style>

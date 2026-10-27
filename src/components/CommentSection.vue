@@ -95,28 +95,71 @@ function canDelete(comment) {
 .comments {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
+}
+.comments h2 {
+  margin: 0;
+  font-size: 20px;
 }
 .list {
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 10px;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
+/* One comment = a little bubble */
+.list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px;
+  padding: 10px 12px;
+  font-size: 14px;
+  color: #eadcff;
+  background: rgba(18, 5, 31, 0.5);
+  border: 1px solid rgba(215, 184, 255, 0.2);
+  border-radius: 14px;
+}
+.list li button {
+  margin-left: auto;
+  min-height: 30px;
+  padding: 4px 12px;
+  font-size: 12px;
+  background: rgba(255, 143, 200, 0.14);
+  border: 1px solid rgba(255, 143, 200, 0.6);
+  box-shadow: none;
+}
+/* Write a comment: input + post button on one line */
 .composer {
   display: flex;
+  flex-direction: row;
   gap: 8px;
+  max-width: none;
 }
 .composer input {
   flex: 1;
+  padding: 10px 16px;
+  border-radius: 999px;
+}
+.composer button {
+  min-height: 42px;
+  padding: 8px 20px;
+  font-size: 14px;
 }
 .empty {
-  padding: 8px 0;
+  padding: 12px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 14px;
+}
+.empty p {
+  margin: 0;
 }
 .field-error {
   margin: 0;
-  color: #c0145b;
+  color: #ff8fc8;
 }
 .sr-only {
   position: absolute;

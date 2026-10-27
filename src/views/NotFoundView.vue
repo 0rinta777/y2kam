@@ -8,7 +8,22 @@
 
 <style scoped>
 .not-found {
-  padding: 60px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 80px 16px;
   text-align: center;
+}
+.not-found h1 {
+  font-size: clamp(90px, 18vw, 180px);
+  margin: 0;
+}
+.not-found p {
+  font-size: 20px;
+  color: #ffffff;
+}
+.not-found a {
+  font-weight: 700;
 }
 </style>

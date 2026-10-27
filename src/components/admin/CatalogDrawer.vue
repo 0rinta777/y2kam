@@ -134,20 +134,24 @@ function submit() {
 .overlay {
   position: fixed;
   inset: 0;
+  z-index: 50;
   display: flex;
   justify-content: flex-end;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(11, 4, 20, 0.6);
 }
+/* Side drawer from the Figma admin "add new / edit" screens */
 .drawer {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  width: 420px;
+  gap: 14px;
+  width: 500px;
   max-width: 100%;
   height: 100%;
   overflow-y: auto;
-  padding: 24px;
-  background: white;
+  padding: 28px;
+  color: #eadcff;
+  background: #1c0b33;
+  border-left: 1px solid rgba(215, 184, 255, 0.2);
 }
 header,
 footer {
@@ -156,27 +160,65 @@ footer {
   align-items: center;
   gap: 8px;
 }
+header h2 {
+  margin: 0;
+  font-size: 26px;
+}
+footer {
+  justify-content: flex-end;
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid rgba(215, 184, 255, 0.14);
+}
+/* Type as a two-option switch */
+fieldset {
+  display: flex;
+  gap: 8px;
+}
+fieldset label {
+  flex: 1;
+  justify-content: center;
+  padding: 10px;
+  border: 1px solid rgba(215, 184, 255, 0.3);
+  border-radius: 12px;
+  cursor: pointer;
+}
+fieldset label:has(input:checked) {
+  color: #ffffff;
+  background: rgba(183, 99, 234, 0.25);
+  border-color: #b763ea;
+}
+fieldset:disabled label {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
 .slider {
   display: flex;
   flex-direction: column;
 }
+.slider span {
+  display: flex;
+  justify-content: space-between;
+}
 .preview-swatch {
   display: grid;
   place-items: center;
-  height: 120px;
-  border-radius: 12px;
-  color: white;
+  height: 130px;
+  border-radius: 14px;
+  color: #ffffff;
   font-size: 28px;
-  font-weight: bold;
+  font-weight: 700;
   background: linear-gradient(135deg, #ff8fc8, #9b4fe0, #3dadff);
 }
 .frame-preview {
   max-height: 300px;
   align-self: flex-start;
-  background: #eee;
+  border-radius: 8px;
+  /* checkerboard so transparent parts are visible */
+  background: repeating-conic-gradient(#2a1745 0% 25%, #1c0b33 0% 50%) 50% / 20px 20px;
 }
 .field-error {
   margin: 0;
-  color: #c0145b;
+  color: #ff8fc8;
 }
 </style>

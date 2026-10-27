@@ -73,3 +73,34 @@ async function submit() {
     </form>
   </main>
 </template>
+
+<style scoped>
+main {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 440px;
+  margin: 40px auto;
+  padding: 36px;
+  background: rgba(30, 8, 56, 0.74);
+  border: 1.5px solid rgba(215, 184, 255, 0.45);
+  border-radius: 28px;
+  box-shadow: 0 0 30px rgba(157, 77, 230, 0.35);
+  backdrop-filter: blur(12px);
+
+}
+main h1 {
+  margin: 0;
+  font-size: clamp(28px, 5vw, 38px);
+  text-align: center;
+}
+main form {
+  max-width: none;
+}
+@media (max-width: 600px) {
+  main {
+    margin: 16px auto;
+    padding: 24px;
+  }
+}
+</style>

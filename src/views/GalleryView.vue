@@ -68,7 +68,7 @@ async function remove(strip) {
   <main class="gallery">
     <header>
       <h1>my gallery</h1>
-      <RouterLink to="/booth">+ new strip</RouterLink>
+      <RouterLink to="/booth" class="btn-primary new-strip">+ new strip</RouterLink>
     </header>
 
     <!-- Feedback after actions -->
@@ -115,26 +115,74 @@ async function remove(strip) {
 </template>
 
 <style scoped>
-.gallery {
-  padding: 16px;
+/* ---- Laptop/desktop: smaller cards so your strips fit on one screen,
+   header the same size as settings and about ---- */
+@media (min-width: 701px) {
+  .gallery {
+    margin-top: -8px;
+    margin-bottom: -48px; /* skip the page's empty bottom space */
+  }
+  header {
+    margin-bottom: 18px;
+  }
+  header h1 {
+    font-size: 40px;
+  }
+  .new-strip {
+    padding: 10px 24px;
+    font-size: 15px;
+  }
+  .grid {
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 20px;
+  }
+  .empty {
+    min-height: calc(100svh - 230px);
+  }
 }
 header {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+header h1 {
+  margin-bottom: 0;
+}
+.new-strip {
+  padding: 12px 28px;
+  font-size: 16px;
+  background: linear-gradient(180deg, #d08bff 0%, #b763ea 50%, #7b2fc9 100%);
+  border: 1.5px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 0 12px rgba(199, 125, 255, 0.75);
+  overflow: hidden;
 }
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 32px;
+  align-items: start;
 }
-.toast {
-  padding: 8px 12px;
-  border-radius: 8px;
-  background: #eee;
-}
+/* Empty state card */
 .empty {
-  padding: 40px 0;
+  display: flex;
+  justify-content: center;
+  min-height: 50vh; /* big empty-state box */
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 56px 24px;
   text-align: center;
+  background: rgba(30, 8, 56, 0.6);
+  border: 1.5px dashed rgba(215, 184, 255, 0.45);
+  border-radius: 28px;
+}
+.empty p {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #ffffff;
 }
 </style>

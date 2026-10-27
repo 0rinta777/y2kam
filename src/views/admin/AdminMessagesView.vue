@@ -61,34 +61,60 @@ async function onDelete(msg) {
   display: flex;
   flex-direction: column;
   gap: 12px;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
 .list li {
-  padding: 12px;
-  border: 1px solid #eee;
-  border-radius: 12px;
+  padding: 18px;
+  background: rgba(28, 11, 51, 0.92);
+  border: 1px solid rgba(215, 184, 255, 0.14);
+  border-radius: 18px;
+
 }
+.list li p {
+  margin: 0 0 6px;
+}
+/* Unread = purple border */
 .unread {
   border-color: #9b4fe0 !important;
+  box-shadow: inset 4px 0 0 #9b4fe0;
 }
 .badge {
-  padding: 2px 8px;
-  border-radius: 999px;
-  background: #9b4fe0;
-  color: white;
+  margin-left: 6px;
+  padding: 2px 10px;
   font-size: 12px;
+  font-weight: 600;
+  color: #ffffff;
+  background: #9b4fe0;
+  border-radius: 999px;
 }
 .text {
   white-space: pre-line; /* keep line breaks from the message */
+  color: #ffffff;
 }
 .actions {
   display: flex;
-  gap: 12px;
+  flex-wrap: wrap;
   align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+/* delete = pink outline */
+.actions button:last-child {
+  color: #ffd3ea;
+  background: transparent;
+  border-color: rgba(255, 143, 200, 0.7);
 }
 .empty {
-  padding: 40px 0;
+  padding: 56px 24px;
+  font-family: var(--font-display);
+  font-size: 26px;
+  color: #ffffff;
   text-align: center;
+  background: rgba(28, 11, 51, 0.92);
+  border: 1px solid rgba(215, 184, 255, 0.14);
+  border-radius: 18px;
+
 }
 </style>

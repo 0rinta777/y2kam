@@ -33,7 +33,13 @@ function toggle() {
       :aria-label="`notifications, ${unread} new`"
       @click="toggle"
     >
-      𖦹 <span v-if="unread" class="count">{{ unread }}</span>
+      <!-- bell icon (drawn with SVG so it looks the same on every device) -->
+      <svg class="icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          d="M12 3a6 6 0 0 0-6 6v3.6l-1.6 2.7A1 1 0 0 0 5.3 17h13.4a1 1 0 0 0 .9-1.7L18 12.6V9a6 6 0 0 0-6-6Zm-2.5 15.5a2.5 2.5 0 0 0 5 0Z"
+        />
+      </svg>
+      <span v-if="unread" class="count">{{ unread }}</span>
     </button>
 
     <div v-if="open" class="panel" role="region" aria-label="notifications">
@@ -56,6 +62,11 @@ function toggle() {
 .bell > button {
   min-height: 40px;
   padding: 6px 14px;
+}
+.icon {
+  width: 20px;
+  height: 20px;
+  fill: currentColor;
 }
 .count {
   padding: 1px 7px;

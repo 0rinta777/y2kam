@@ -120,18 +120,136 @@ function formatDate(iso) {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  padding: 16px;
 }
+.detail > a {
+  align-self: flex-start;
+  padding: 8px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  text-decoration: none;
+}
+/* Two columns: the strip on the left, info + comments on the right */
 .strip {
   display: flex;
-  gap: 32px;
+  flex-wrap: wrap;
+  gap: 40px;
   align-items: flex-start;
 }
 .strip img {
-  max-height: 80vh;
-  border-radius: 12px;
+  max-height: calc(100svh - 210px); /* whole strip visible without scrolling */
+  max-width: 100%;
+  min-width: 160px;
+  border: 6px solid #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 0 15px rgba(199, 125, 255, 0.55);
+  /* if the photo can't load: purple box instead of the caption text */
+  color: transparent;
+  background: linear-gradient(127deg, #5b1f9e 0%, #2a0a4e 71%);
+}
+/* Info card: title + "by" on top, then the buttons in one row */
+.info {
+  flex: 1;
+  min-width: 280px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 28px;
+  background: rgba(30, 8, 56, 0.74);
+  border: 1.5px solid rgba(215, 184, 255, 0.45);
+  border-radius: 28px;
+  box-shadow: 0 0 30px rgba(157, 77, 230, 0.35);
+  backdrop-filter: blur(12px);
 }
 .info h1 {
-  margin-top: 0;
+  flex-basis: 100%;
+  margin: 0;
+  font-size: clamp(28px, 4vw, 40px);
+}
+.info > p {
+  flex-basis: 100%;
+  margin: 0 0 4px;
+  color: #dcc9ff;
+}
+.info p a {
+  color: #ffffff;
+}
+/* "open full size" looks like the other pill buttons */
+.info > a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 10px 20px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #ffffff;
+  text-decoration: none;
+  background: rgba(18, 5, 31, 0.7);
+  border: 2px solid #d7b8ff;
+  border-radius: 999px;
+}
+.info > a:hover {
+  background: rgba(163, 92, 230, 0.35);
+}
+/* Liked heart: pink */
+.info > button[aria-pressed='true'] {
+  background: rgba(255, 143, 200, 0.25);
+  border-color: #ff8fc8;
+}
+/* Comments get their own full-width part */
+.info > :deep(.comments) {
+  flex-basis: 100%;
+  margin-top: 8px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(215, 184, 255, 0.2);
+}
+/* "report" is small and pink, at the bottom */
+.info > button:last-child:not([aria-pressed]) {
+  min-height: 36px;
+  margin-top: 4px;
+  padding: 6px 16px;
+  font-size: 13px;
+  color: #ffd3ea;
+  background: transparent;
+  border: 1px solid rgba(255, 143, 200, 0.6);
+  box-shadow: none;
+}
+.info > p[role='status'] {
+  margin-top: 4px;
+}
+
+/* Laptop/desktop: the whole page fits on one screen, no scrolling.
+   If there are lots of comments, the info card scrolls inside itself. */
+@media (min-width: 701px) {
+  .detail {
+    gap: 8px;
+    margin-bottom: -48px; /* skip the page's empty bottom space */
+  }
+  .detail > a {
+    padding: 4px 0;
+  }
+  .info {
+    max-height: calc(100svh - 210px);
+    overflow-y: auto;
+  }
+}
+
+@media (max-width: 700px) {
+  .strip {
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+  .strip img {
+    position: static;
+    width: min(240px, 70vw);
+    max-height: none;
+  }
+  .info {
+    min-width: 0;
+    width: 100%;
+    padding: 20px;
+  }
 }
 </style>

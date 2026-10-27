@@ -110,3 +110,49 @@ function switchTo(newMode) {
     <button v-if="mode !== 'login'" type="button" @click="switchTo('login')">back to log in</button>
   </form>
 </template>
+
+<style scoped>
+/* Login / sign up card, centred */
+form {
+  max-width: 440px;
+  margin: 40px auto;
+  padding: 36px;
+  background: rgba(30, 8, 56, 0.74);
+  border: 1.5px solid rgba(215, 184, 255, 0.45);
+  border-radius: 28px;
+  box-shadow: 0 0 30px rgba(157, 77, 230, 0.35);
+  backdrop-filter: blur(12px);
+
+}
+form h1 {
+  margin: 0 0 4px;
+  text-align: center;
+}
+form button[type='submit'] {
+  margin-top: 6px;
+}
+/* "forgot password?", "sign up", "back to log in" look like links */
+form button[type='button'] {
+  min-height: auto;
+  padding: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #d7b8ff;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  background: none;
+  border: none;
+  box-shadow: none;
+}
+form button[type='button']:hover:not(:disabled) {
+  color: #ffffff;
+  background: none;
+  box-shadow: none;
+}
+@media (max-width: 600px) {
+  form {
+    margin: 16px auto;
+    padding: 24px;
+  }
+}
+</style>

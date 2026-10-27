@@ -71,35 +71,79 @@ function submit() {
 .overlay {
   position: fixed;
   inset: 0;
+  z-index: 50;
   display: grid;
+  grid-template-columns: minmax(0, 1fr); /* the popup can shrink on small phones */
   place-items: center;
   padding: 16px;
-  background: rgba(0, 0, 0, 0.6);
+  background: rgba(13, 6, 20, 0.62);
+  backdrop-filter: blur(4px);
 }
+/* Popup card from the Figma "report popup" component */
 .dialog {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  width: 420px;
-  max-width: 100%;
+  gap: 16px;
+  width: min(460px, 100%);
   max-height: 90vh;
   overflow-y: auto;
-  padding: 24px;
-  border-radius: 16px;
-  background: white;
+  padding: 32px;
+  color: #eadcff;
+  background: rgba(30, 8, 56, 0.96);
+  border: 1.5px solid rgba(215, 184, 255, 0.45);
+  border-radius: 28px;
+  box-shadow: 0 0 40px rgba(163, 92, 230, 0.35);
 }
+.dialog h2 {
+  font-size: 28px;
+  margin: 0;
+}
+/* Reasons as rows you can pick */
 fieldset {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 10px;
+  padding: 0;
+  border: none;
+}
+legend {
+  margin-bottom: 8px;
+  padding: 0;
+}
+fieldset label {
+  padding: 14px 16px;
+  background: rgba(18, 5, 31, 0.6);
+  border: 1.5px solid rgba(215, 184, 255, 0.25);
+  border-radius: 16px;
+  cursor: pointer;
+}
+fieldset label:has(input:checked) {
+  color: #ffffff;
+  font-weight: 600;
+  background: rgba(183, 99, 234, 0.22);
+  border-color: #c77dff;
 }
 .buttons {
   display: flex;
+  flex-wrap: wrap;
   justify-content: flex-end;
-  gap: 8px;
+  gap: 10px;
 }
 .field-error {
   margin: 0;
-  color: #c0145b;
+  color: #ff8fc8;
+}
+@media (max-width: 600px) {
+  .dialog {
+    padding: 22px;
+    border-radius: 24px;
+  }
+  .dialog h2 {
+    font-size: 24px;
+  }
+  /* buttons side by side, full width, easy to tap */
+  .buttons button {
+    flex: 1;
+  }
 }
 </style>

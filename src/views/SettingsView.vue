@@ -219,43 +219,112 @@ async function removeAccount() {
   display: flex;
   flex-direction: column;
   gap: 24px;
-  padding: 16px;
-  max-width: 480px;
+  max-width: 560px;
+  margin: 0 auto;
 }
+.settings > h1,
+.settings > p {
+  margin: 0;
+}
+/* Each section is a glass card */
 form {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  padding: 16px;
-  border: 1px solid #eee;
-  border-radius: 12px;
+  gap: 12px;
+  max-width: none;
+  padding: 28px;
+  background: rgba(30, 8, 56, 0.74);
+  border: 1.5px solid rgba(215, 184, 255, 0.45);
+  border-radius: 28px;
+  box-shadow: 0 0 30px rgba(157, 77, 230, 0.35);
+  backdrop-filter: blur(12px);
 }
 form h2 {
-  margin: 0;
+  margin: 0 0 4px;
+  font-size: 26px;
 }
 .avatar-row {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 16px;
+  gap: 20px;
 }
 .avatar {
-  width: 80px;
-  height: 80px;
+  flex: none;
+  width: 88px;
+  height: 88px;
   border-radius: 50%;
   object-fit: cover;
+  border: 3px solid #ffffff;
+  box-shadow: 0 0 14px rgba(199, 125, 255, 0.8);
 }
 .placeholder {
   display: grid;
   place-items: center;
-  background: #ddd;
-  font-size: 32px;
-  font-weight: bold;
+  font-size: 34px;
+  font-weight: 700;
+  color: #ffffff;
+  background: radial-gradient(circle at 35% 30%, #d08bff, #7b2fc9);
 }
+form button[type='submit'] {
+  align-self: flex-start;
+}
+/* Danger zone: pink */
 .danger {
-  border-color: #f3b4cf;
+  border-color: rgba(255, 143, 200, 0.6);
+  box-shadow: 0 0 24px rgba(255, 143, 200, 0.2);
+}
+.danger button[type='submit'] {
+  background: linear-gradient(180deg, #ff8fc8 0%, #c2186b 100%);
 }
 .field-error {
   margin: 0;
-  color: #c0145b;
+  color: #ff8fc8;
+}
+/* Laptop/desktop: the 3 cards side by side, so everything fits on one screen */
+@media (min-width: 1000px) {
+  .settings {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr)); /* 3 equal columns */
+    align-items: start;
+    gap: 16px 24px;
+    max-width: 1200px;
+    margin-top: -8px;
+    margin-bottom: -48px; /* skip the page's empty bottom space */
+  }
+  /* title on the left, "logged in as" on the right, same line */
+  .settings > h1 {
+    grid-column: 1;
+    font-size: 38px;
+  }
+  .settings > p {
+    grid-column: 2 / -1;
+    align-self: center;
+    justify-self: end;
+  }
+  /* more compact cards so they fit smaller laptops too */
+  form {
+    gap: 8px;
+    padding: 20px 22px;
+  }
+  form h2 {
+    font-size: 24px;
+  }
+  /* profile picture next to the "change" button instead of above it */
+  .avatar-row {
+    flex-wrap: nowrap;
+    gap: 14px;
+  }
+  .avatar-row label {
+    min-width: 0;
+  }
+  .avatar {
+    width: 64px;
+    height: 64px;
+    font-size: 28px;
+  }
+  textarea {
+    height: 64px;
+  }
 }
 </style>

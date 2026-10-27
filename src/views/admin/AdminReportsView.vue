@@ -82,26 +82,59 @@ async function onKeep(report) {
   display: flex;
   flex-direction: column;
   gap: 16px;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
 .report {
   display: flex;
-  gap: 16px;
-  padding: 12px;
-  border: 1px solid #eee;
-  border-radius: 12px;
+  flex-wrap: wrap;
+  gap: 20px;
+  padding: 18px;
+  background: rgba(28, 11, 51, 0.92);
+  border: 1px solid rgba(215, 184, 255, 0.14);
+  border-radius: 18px;
+
 }
 .thumb {
-  height: 160px;
-  border-radius: 8px;
+  height: 170px;
+  border: 3px solid #ffffff;
+  border-radius: 10px;
+}
+.info {
+  flex: 1;
+  min-width: 220px;
+}
+.info p {
+  margin: 0 0 6px;
 }
 .actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
+  margin-top: 10px;
 }
+/* "remove strip" = pink outline */
+.actions button:first-child:not(:last-child) {
+  color: #ffd3ea;
+  background: transparent;
+  border-color: rgba(255, 143, 200, 0.7);
+}
+/* Empty state from the Figma admin components */
 .empty {
-  padding: 40px 0;
+  padding: 56px 24px;
   text-align: center;
+  background: rgba(28, 11, 51, 0.92);
+  border: 1px solid rgba(215, 184, 255, 0.14);
+  border-radius: 18px;
+
+}
+.empty p {
+  margin: 0 0 6px;
+}
+.empty p:first-child {
+  font-family: var(--font-display);
+  font-size: 28px;
+  color: #ffffff;
 }
 </style>

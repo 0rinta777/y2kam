@@ -121,47 +121,81 @@ watch(userId, load, { immediate: true })
 .profile {
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 16px;
+  gap: 20px;
 }
+.profile > a {
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  text-decoration: none;
+}
+/* Profile header card */
 .head {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 20px;
+  gap: 24px;
+  padding: 28px;
+  background: rgba(30, 8, 56, 0.74);
+  border: 1.5px solid rgba(215, 184, 255, 0.45);
+  border-radius: 28px;
+  box-shadow: 0 0 30px rgba(157, 77, 230, 0.35);
+  backdrop-filter: blur(12px);
 }
 .head h1 {
   margin: 0;
 }
 .avatar {
-  width: 112px;
-  height: 112px;
+  flex: none;
+  width: 120px;
+  height: 120px;
   border-radius: 50%;
   object-fit: cover;
+  border: 4px solid #ffffff;
+  box-shadow: 0 0 18px rgba(199, 125, 255, 0.8);
 }
 .placeholder {
   display: grid;
   place-items: center;
-  background: #ddd;
-  font-size: 44px;
-  font-weight: bold;
+  font-size: 48px;
+  font-weight: 700;
+  color: #ffffff;
+  background: radial-gradient(circle at 35% 30%, #d08bff, #7b2fc9);
 }
 .bio {
-  margin: 6px 0;
+  margin: 6px 0 10px;
+  color: #eadcff;
 }
+/* Stats as little pills */
 .stats {
   display: flex;
   flex-wrap: wrap;
-  gap: 20px;
+  gap: 12px;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
+.stats li {
+  padding: 8px 16px;
+  font-size: 14px;
+  color: #eadcff;
+  background: rgba(189, 153, 242, 0.18);
+  border: 1px solid rgba(215, 184, 255, 0.5);
+  border-radius: 999px;
+}
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 24px;
 }
 .empty {
-  padding: 40px 0;
+  padding: 48px 24px;
+  font-size: 20px;
+  font-weight: 600;
+  color: #ffffff;
   text-align: center;
+  background: rgba(30, 8, 56, 0.6);
+  border: 1.5px dashed rgba(215, 184, 255, 0.45);
+  border-radius: 24px;
 }
 </style>

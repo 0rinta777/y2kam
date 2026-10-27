@@ -42,19 +42,28 @@ onMounted(load)
 <style scoped>
 .cards {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
   gap: 16px;
 }
 .card {
-  padding: 16px;
-  border: 1px solid #eee;
-  border-radius: 12px;
+  padding: 22px;
+  background: rgba(28, 11, 51, 0.92);
+  border: 1px solid rgba(215, 184, 255, 0.14);
+  border-radius: 18px;
+
   color: inherit;
   text-decoration: none;
 }
-.number {
+a.card:hover {
+  border-color: #b763ea;
+}
+.card p {
   margin: 0;
-  font-size: 40px;
-  font-weight: bold;
+}
+.number {
+  font-family: var(--font-display);
+  font-size: 44px;
+  line-height: 1.1;
+  color: #ffffff;
 }
 </style>

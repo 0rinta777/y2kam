@@ -1,9 +1,13 @@
+import { ref } from 'vue'
 import { ID, Permission, Role } from 'appwrite'
 import { tablesDB, storage, DB_ID, BUCKET_ID } from '@/lib/appwrite'
 import { useAuth } from '@/composables/useAuth'
 import { squareImage } from '@/lib/image'
 
 const TABLE = 'profiles'
+
+// My own profile picture ID, shared so the nav updates right after I change it
+export const myAvatarId = ref(null)
 
 // URL for a profile picture ('' if there is none)
 export function avatarUrl(fileId) {
@@ -66,6 +70,7 @@ export function useProfile() {
       ],
     })
     await saveProfile({ avatarId: uploaded.$id })
+    myAvatarId.value = uploaded.$id // nav picture updates straight away
     if (oldId) await storage.deleteFile({ bucketId: BUCKET_ID, fileId: oldId }).catch(() => {})
     return uploaded.$id
   }
