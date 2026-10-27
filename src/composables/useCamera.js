@@ -1,4 +1,4 @@
-import { ref, computed, onMounted, onBeforeUnmount } from 'vue'
+import { ref, computed, onBeforeUnmount } from 'vue'
 
 export function useCamera() {
   const videoEl = ref(null) // connected to the <video> in the template
@@ -43,6 +43,7 @@ export function useCamera() {
     const video = videoEl.value
     // Don't capture from a camera that isn't ready (or was turned off)
     if (!video || !stream.value || !video.videoWidth) throw new Error('camera not ready')
+
     const canvas = document.createElement('canvas')
     canvas.width = video.videoWidth
     canvas.height = video.videoHeight
