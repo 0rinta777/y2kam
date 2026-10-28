@@ -156,6 +156,7 @@ async function takePhotos() {
 }
 
 async function save() {
+  if (!stripUrl.value) return // nothing to save
   saving.value = true
   saveError.value = ''
   try {
@@ -172,6 +173,7 @@ async function save() {
 }
 
 async function retake() {
+  step.value = 'idle' // leave the result screen first
   stripCanvas.value = null
   stripUrl.value = ''
   caption.value = ''

@@ -151,13 +151,27 @@ export function useStrips() {
       fileId: strip.imageId,
       permissions: filePermissions(strip.userId, isPublic),
     })
-    const updated = await tablesDB.updateRow({
-      databaseId: DB_ID,
-      tableId: TABLE,
-      rowId: strip.$id,
-      data: { caption, isPublic },
-      permissions: stripPermissions(strip.userId, isPublic),
-    })
+    let updated
+    try {
+      updated = await tablesDB.updateRow({
+        databaseId: DB_ID,
+        tableId: TABLE,
+        rowId: strip.$id,
+        data: { caption, isPublic },
+        permissions: stripPermissions(strip.userId, isPublic),
+      })
+    } catch (e) {
+      // Row didn't save: put the photo's permissions back how they were,
+      // so the photo is never more public than the strip says
+      await storage
+        .updateFile({
+          bucketId: BUCKET_ID,
+          fileId: strip.imageId,
+          permissions: filePermissions(strip.userId, strip.isPublic),
+        })
+        .catch((err) => console.error('permission rollback failed:', err))
+      throw e
+    }
     strips.value = strips.value.map((s) => (s.$id === strip.$id ? updated : s))
     return updated
   }
@@ -198,6 +212,5 @@ export function useStrips() {
     createStrip,
     updateStrip,
     deleteStrip,
-    fixMyFilePermissions,
   }
 }

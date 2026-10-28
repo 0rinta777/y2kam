@@ -69,23 +69,30 @@ export function useCatalog() {
     await loadAll()
   }
 
-  // UPDATE (a new file replaces the old one)
+  // Replace a frame image safely: upload the new one, save the row,
+  // and only then delete the old image (so the row never points to nothing)
   async function updateItem(item, { name, active, settings, file }) {
     let fileId = item.fileId
-    if (file) {
-      fileId = (await uploadFile(file)).$id
-      if (item.fileId)
-        await storage.deleteFile({ bucketId: BUCKET_ID, fileId: item.fileId }).catch(() => {})
+    if (file) fileId = (await uploadFile(file)).$id
+    try {
+      await tablesDB.updateRow({
+        databaseId: DB_ID,
+        tableId: TABLE,
+        rowId: item.$id,
+        data: { name, active, fileId, settings: JSON.stringify(settings || {}) },
+      })
+    } catch (e) {
+      // Row didn't save: remove the new upload again, the old image stays
+      if (file) await storage.deleteFile({ bucketId: BUCKET_ID, fileId }).catch(() => {})
+      throw e
     }
-    await tablesDB.updateRow({
-      databaseId: DB_ID,
-      tableId: TABLE,
-      rowId: item.$id,
-      data: { name, active, fileId, settings: JSON.stringify(settings || {}) },
-    })
+    if (file && item.fileId) {
+      await storage
+        .deleteFile({ bucketId: BUCKET_ID, fileId: item.fileId })
+        .catch((e) => console.error('old frame cleanup failed:', e))
+    }
     await loadAll()
   }
-
   // DELETE (and its image)
   async function deleteItem(item) {
     await tablesDB.deleteRow({ databaseId: DB_ID, tableId: TABLE, rowId: item.$id })

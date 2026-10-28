@@ -38,6 +38,15 @@ async function submit() {
     sending.value = false
   }
 }
+
+// "send another": clear the message and show the form again
+function sendAnother() {
+  form.message = ''
+  errors.name = ''
+  errors.email = ''
+  errors.message = ''
+  sent.value = false
+}
 </script>
 
 <template>

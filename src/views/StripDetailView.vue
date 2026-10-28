@@ -1,5 +1,5 @@
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useStrips, imageUrl } from '@/composables/useStrips'
 import { useAuth } from '@/composables/useAuth'
@@ -50,23 +50,38 @@ async function sendReport({ reason, note }) {
   }
 }
 
+// Load the strip. A counter makes sure an old, slow request
+// can't overwrite a newer one when you jump between strips.
+let lastRequest = 0
 async function load() {
+  const request = ++lastRequest
   loading.value = true
   error.value = ''
   try {
-    strip.value = await getStrip(route.params.id)
+    const found = await getStrip(route.params.id)
+    if (request === lastRequest) strip.value = found
   } catch (e) {
+    if (request !== lastRequest) return
     // 404 = doesn't exist, 401 = private strip you're not allowed to see
     error.value =
       e.code === 404 || e.code === 401
         ? "this strip doesn't exist or is private."
         : "couldn't load this strip. try again."
   } finally {
-    loading.value = false
+    if (request === lastRequest) loading.value = false
   }
 }
 
-onMounted(load)
+// Load now, and again whenever the strip in the URL changes
+watch(
+  () => route.params.id,
+  () => {
+    reported.value = false
+    reporting.value = false
+    load()
+  },
+  { immediate: true },
+)
 
 function formatDate(iso) {
   return new Date(iso)
