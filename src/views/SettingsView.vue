@@ -162,7 +162,7 @@ async function removeAccount() {
           v-model="bio"
           maxlength="160"
           rows="3"
-          placeholder="y2k girlie ✿ sleepovers & glitter"
+          placeholder="y2k girlie ✿ love taking webcam pics"
         />
       </label>
       <small>{{ bio.length }}/160</small>
