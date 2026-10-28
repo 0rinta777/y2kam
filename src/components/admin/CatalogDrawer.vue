@@ -2,6 +2,7 @@
 import { ref, reactive, computed } from 'vue'
 import { DEFAULT_SETTINGS, toCss } from '@/lib/filters'
 import { fileUrl } from '@/composables/useCatalog'
+import FilterEffects from '@/components/FilterEffects.vue'
 
 const props = defineProps({
   item: { type: Object, default: null }, // null = adding a new item
@@ -32,6 +33,14 @@ const SLIDERS = [
   { key: 'hue', label: 'hue shift', min: -180, max: 180, unit: '°' },
   { key: 'grayscale', label: 'black & white', min: 0, max: 100, unit: '%' },
   { key: 'sepia', label: 'sepia', min: 0, max: 100, unit: '%' },
+]
+
+// Extra Y2K effects (drawn on top of the photo)
+const EFFECTS = [
+  { key: 'blur', label: 'soft focus', min: 0, max: 4, step: 0.5, unit: 'px' },
+  { key: 'tint', label: 'colour wash', min: 0, max: 100, unit: '%' },
+  { key: 'vignette', label: 'dark corners', min: 0, max: 100, unit: '%' },
+  { key: 'grain', label: 'film grain', min: 0, max: 100, unit: '%' },
 ]
 
 function onFileChange(event) {
@@ -93,12 +102,34 @@ function submit() {
 
       <!-- Filter: sliders + live preview -->
       <template v-if="type === 'filter'">
-        <div class="preview-swatch" :style="{ filter: toCss(settings) }">♥ y2kam</div>
+        <!-- preview: a little "photo" with the filter + effects on it -->
+        <div class="preview">
+          <div class="preview-swatch" :style="{ filter: toCss(settings) }" />
+          <FilterEffects :settings="settings" />
+        </div>
         <label v-for="s in SLIDERS" :key="s.key" class="slider">
           <span
             >{{ s.label }} <small>{{ settings[s.key] }}{{ s.unit }}</small></span
           >
           <input v-model.number="settings[s.key]" type="range" :min="s.min" :max="s.max" />
+        </label>
+
+        <p class="group">y2k effects</p>
+        <label v-for="s in EFFECTS" :key="s.key" class="slider">
+          <span
+            >{{ s.label }} <small>{{ settings[s.key] }}{{ s.unit }}</small></span
+          >
+          <input
+            v-model.number="settings[s.key]"
+            type="range"
+            :min="s.min"
+            :max="s.max"
+            :step="s.step || 1"
+          />
+        </label>
+        <label class="color">
+          colour wash colour
+          <input v-model="settings.tintColor" type="color" />
         </label>
       </template>
 
@@ -200,15 +231,39 @@ fieldset:disabled label {
   display: flex;
   justify-content: space-between;
 }
-.preview-swatch {
-  display: grid;
-  place-items: center;
-  height: 130px;
+/* Filter preview: a simple drawn "photo" (face, wall, sofa) */
+.preview {
+  position: relative;
+  height: 160px;
+  flex: none;
+  overflow: hidden;
   border-radius: 14px;
-  color: #ffffff;
-  font-size: 28px;
+}
+.preview-swatch {
+  height: 100%;
+  background: url('@/assets/filter-preview.webp') center / cover;
+}
+.group {
+  margin: 8px 0 0;
+  font-size: 12px;
   font-weight: 700;
-  background: linear-gradient(135deg, #ff8fc8, #9b4fe0, #3dadff);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #d7b8ff;
+}
+.color {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.color input {
+  width: 56px;
+  height: 34px;
+  padding: 2px;
+  background: transparent;
+  border: 1px solid rgba(215, 184, 255, 0.4);
+  border-radius: 8px;
+  cursor: pointer;
 }
 .frame-preview {
   max-height: 300px;

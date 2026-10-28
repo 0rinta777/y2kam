@@ -8,22 +8,29 @@ import { useCatalog, fileUrl } from '@/composables/useCatalog'
 import { toCss } from '@/lib/filters'
 import { buildStrip } from '@/lib/strip'
 import OptionPicker from '@/components/OptionPicker.vue'
+import FilterPicker from '@/components/FilterPicker.vue'
+import FilterEffects from '@/components/FilterEffects.vue'
 
 const router = useRouter()
-const { videoEl, error, starting, isOn, start, stop, capture } = useCamera()
+const { videoEl, stream, error, starting, isOn, start, stop, capture } = useCamera()
 const { isLoggedIn } = useAuth()
 const { createStrip } = useStrips()
 const { items: catalog, loadActive } = useCatalog()
 
 // --- Filters and frames from Appwrite ---
-const NO_FILTER = { id: 'none', name: 'none', css: 'none' }
+const NO_FILTER = { id: 'none', name: 'none', css: 'none', settings: {} }
 const NO_FRAME = { id: 'none', name: 'no frame', url: null }
 
 const filters = computed(() => [
   NO_FILTER,
   ...catalog.value
     .filter((item) => item.type === 'filter')
-    .map((item) => ({ id: item.$id, name: item.name, css: toCss(item.settings) })),
+    .map((item) => ({
+      id: item.$id,
+      name: item.name,
+      css: toCss(item.settings),
+      settings: item.settings, // for the extra effects (tint, grain, vignette)
+    })),
 ])
 
 const frames = computed(() => [
@@ -134,7 +141,7 @@ async function takePhotos() {
     }
 
     usedFilter.value = filter.value.name
-    stripCanvas.value = await buildStrip(photos, frame.value.url)
+    stripCanvas.value = await buildStrip(photos, frame.value.url, filter.value.settings)
     stripUrl.value = stripCanvas.value.toDataURL('image/jpeg', 0.9)
     step.value = 'done'
   } catch (e) {
@@ -187,6 +194,8 @@ async function retake() {
       :class="{ loading: starting }"
     >
       <video ref="videoEl" playsinline muted :style="{ filter: filter.css }" />
+      <!-- live preview of the filter's tint / grain / vignette -->
+      <FilterEffects :settings="filter.settings" />
       <p v-if="starting" class="camera-msg">starting camera… ♥</p>
       <div v-if="countdown" class="countdown" aria-live="assertive">{{ countdown }}</div>
       <div v-if="flash" class="flash" />
@@ -202,7 +211,7 @@ async function retake() {
 
     <!-- Step 2: pick a filter and frame, then shoot -->
     <section v-if="step === 'ready' || starting">
-      <OptionPicker v-model="filter" label="filter" :options="filters" />
+      <FilterPicker v-model="filter" :options="filters" :stream="stream" />
       <OptionPicker v-model="frame" label="frame" :options="frames" />
       <button :disabled="step !== 'ready'" @click="takePhotos">take photos</button>
     </section>
@@ -336,6 +345,11 @@ async function retake() {
   background: #ffffff;
   border-radius: 32px;
 }
+/* Filter effects sit on the video only, not on the white frame */
+.camera > .effects {
+  inset: 6px;
+  border-radius: 26px;
+}
 
 /* ---- Step 2: filter + frame + take photos, under the camera ---- */
 .booth > section:not(.result):not(:has(> p)) {
@@ -376,12 +390,12 @@ async function retake() {
 .booth:has(> .camera:not([style*='none'])) .camera video {
   width: auto;
   max-width: 100%;
-  max-height: max(220px, calc(100svh - 270px));
+  max-height: max(220px, calc(100svh - 300px));
   margin: 0 auto;
 }
 /* While the camera is starting: same frame size as the real camera, so nothing jumps */
 .booth:has(> .camera:not([style*='none'])) .camera.loading {
-  width: min(100%, calc((100svh - 270px) * 16 / 9));
+  width: min(100%, calc((100svh - 300px) * 16 / 9));
 }
 .booth:has(> .camera:not([style*='none'])) .camera.loading video {
   width: 100%;
@@ -503,7 +517,7 @@ async function retake() {
 /* ---- Phones ---- */
 @media (max-width: 600px) {
   .booth:has(> .camera:not([style*='none'])) .camera video {
-    max-height: max(200px, calc(100svh - 350px));
+    max-height: max(200px, calc(100svh - 390px));
   }
   .booth > section:not(.result):has(> p) {
     aspect-ratio: 4 / 3;

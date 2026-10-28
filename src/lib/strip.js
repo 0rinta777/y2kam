@@ -1,3 +1,5 @@
+import { applyEffects } from '@/lib/filters'
+
 // Fixed strip size. Every frame image must be designed at exactly this size.
 export const STRIP_W = 600
 export const STRIP_H = 1800
@@ -7,8 +9,9 @@ const GAP = 20 // space between photos
 const PHOTO_W = STRIP_W - PAD * 2 // 540
 const PHOTO_H = 405 // 4:3 photos
 
-// Build one strip canvas from 4 photo canvases (+ optional frame image URL)
-export async function buildStrip(photos, frameUrl = null) {
+// Build one strip canvas from 4 photo canvases
+// (+ optional frame image URL, + the filter's extra effects like tint/grain/vignette)
+export async function buildStrip(photos, frameUrl = null, effects = {}) {
   const canvas = document.createElement('canvas')
   canvas.width = STRIP_W
   canvas.height = STRIP_H
@@ -22,6 +25,7 @@ export async function buildStrip(photos, frameUrl = null) {
   photos.forEach((photo, i) => {
     const y = PAD + i * (PHOTO_H + GAP)
     drawCover(ctx, photo, PAD, y, PHOTO_W, PHOTO_H)
+    applyEffects(ctx, PAD, y, PHOTO_W, PHOTO_H, effects)
   })
 
   // Frame with fixed stickers goes on top

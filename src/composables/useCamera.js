@@ -58,5 +58,6 @@ export function useCamera() {
   // Always turn the camera off when leaving the page
   onBeforeUnmount(stop)
 
-  return { videoEl, error, starting, isOn, start, stop, capture }
+  // stream is shared so the filter previews can show the same camera
+  return { videoEl, stream, error, starting, isOn, start, stop, capture }
 }
