@@ -7,21 +7,21 @@ import ContactForm from '@/components/ContactForm.vue'
     <h1>about y2kam</h1>
 
     <section>
+      <p>y2kam is a free online photobooth with an early 2000s feel :)</p>
       <p>
-        y2kam is a free online photobooth inspired by the early 2000s: glitter, chrome, butterflies
-        and grainy webcam pics.
+        Pick a filter and a frame, take the 4 photos, and get your own photo strip. save it to your
+        gallery, keep it private or share it on the wall.
       </p>
       <p>
-        take 4 photos with a countdown, add a filter and a frame, and get a classic photo strip.
-        save your strips to your own gallery, keep them private or share them on the wall with other
-        members.
+        i've always loved taking webcam pics, so I made the photobooth I wanted to use. It's built
+        with vue and appwrite as a school project.
       </p>
-      <p>made with ♥ by orinta as a school project.</p>
+      <p>made with ♥ by orinta</p>
     </section>
 
     <section aria-labelledby="contact-title">
       <h2 id="contact-title">contact us</h2>
-      <p>questions, ideas or found a bug? send us a message ♥</p>
+      <p>questions, ideas or found a bug? send me a message ♥</p>
       <ContactForm />
     </section>
   </main>

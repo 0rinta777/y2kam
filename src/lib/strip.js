@@ -49,13 +49,16 @@ function drawCover(ctx, img, x, y, w, h) {
 
 // Load an image from a URL. crossOrigin lets us export the canvas later
 // (without it, images from Appwrite would block toBlob()).
+// The extra "cors=1" makes it a different URL than the same frame shown
+// elsewhere (admin, picker): otherwise the browser reuses a cached copy
+// that was loaded without CORS, and the image gets blocked.
 function loadImage(url) {
   return new Promise((resolve, reject) => {
     const img = new Image()
     img.crossOrigin = 'anonymous'
     img.onload = () => resolve(img)
-    img.onerror = reject
-    img.src = url
+    img.onerror = () => reject(new Error(`couldn't load the frame image: ${url}`))
+    img.src = url + (url.includes('?') ? '&' : '?') + 'cors=1'
   })
 }
 

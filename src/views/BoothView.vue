@@ -209,13 +209,18 @@ async function retake() {
       <p v-if="shootError" role="alert">{{ shootError }}</p>
     </section>
 
-    <!-- Step 2: pick a filter and frame, then shoot -->
-    <section v-if="step === 'ready' || starting">
+    <!-- stays visible while shooting, but locked (inert = can't be clicked) -->
+    <section
+      v-if="step === 'ready' || step === 'shooting' || starting"
+      :class="{ busy: step === 'shooting' }"
+      :inert="step === 'shooting'"
+    >
       <FilterPicker v-model="filter" :options="filters" :stream="stream" />
       <OptionPicker v-model="frame" label="frame" :options="frames" />
-      <button :disabled="step !== 'ready'" @click="takePhotos">take photos</button>
+      <button :disabled="step !== 'ready'" @click="takePhotos">
+        {{ step === 'shooting' ? 'taking photos…' : 'take photos' }}
+      </button>
     </section>
-
     <!-- Step 3: shooting -->
     <p v-if="step === 'shooting'" aria-live="polite">
       photo {{ Math.min(photosTaken + 1, PHOTO_COUNT) }} of {{ PHOTO_COUNT }}
@@ -535,5 +540,133 @@ async function retake() {
   .strip {
     width: 210px;
   }
+}
+/* ---- Laptop/desktop result: everything on one screen, no scrolling ----
+   title on top, the strip on the left (as tall as fits), buttons on the right */
+@media (min-width: 701px) {
+  .result {
+    display: grid;
+    grid-template-columns: auto 340px;
+    grid-template-areas:
+      'title title'
+      'strip actions';
+    justify-content: center;
+    align-items: center;
+    gap: 16px 48px;
+    margin-top: -8px;
+    margin-bottom: -56px; /* skip the page's empty bottom space */
+  }
+  .result h2 {
+    grid-area: title;
+    font-size: 40px;
+  }
+  .strip {
+    grid-area: strip;
+    width: auto;
+    height: calc(100svh - 210px); /* the whole strip fits on screen */
+    min-height: 360px;
+  }
+  .actions {
+    grid-area: actions;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    width: 340px;
+  }
+  .actions label {
+    max-width: none;
+  }
+}
+/* ---- Laptop/desktop booth: camera on the left, all choices on the right ----
+   so the camera, every filter, every frame and the button fit on one screen */
+@media (min-width: 1000px) {
+  .booth:has(> .camera:not([style*='none'])) {
+    display: grid;
+    grid-template-columns: auto 340px;
+    justify-content: center; /* camera + panel together in the middle */
+    align-items: center; /* camera lines up with the middle of the panel */
+    align-content: center;
+    gap: 14px 32px;
+    max-width: 1240px;
+    min-height: calc(100svh - 100px); /* fill the screen under the nav, content in the middle */
+  }
+  .booth:has(> .camera:not([style*='none'])) > .camera {
+    grid-column: 1;
+    grid-row: 1;
+    justify-self: center;
+  }
+  /* the camera can use almost the full screen height now */
+  .booth:has(> .camera:not([style*='none'])) .camera video {
+    max-height: calc(100svh - 140px);
+  }
+  /* "starting camera…" box: same size as the real camera will be
+     (screen width minus the panel, or the height that fits — whichever is smaller) */
+  .booth:has(> .camera:not([style*='none'])) .camera.loading {
+    width: min(748px, calc(100vw - 460px), calc((100svh - 140px) * 16 / 9));
+  }
+  /* "photo 2 of 4" under the camera */
+  .booth > p[aria-live] {
+    grid-column: 1;
+    grid-row: 2;
+    justify-self: center;
+  }
+  /* the choices: a glass panel on the right */
+  .booth > section:not(.result):not(:has(> p)) {
+    grid-column: 2;
+    grid-row: 1;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+    gap: 12px;
+    max-height: calc(100svh - 110px); /* very small screens: the panel scrolls, not the page */
+    overflow-y: auto;
+    padding: 16px;
+    background: rgba(30, 8, 56, 0.74);
+    border: 1.5px solid rgba(215, 184, 255, 0.45);
+    border-radius: 24px;
+    box-shadow: 0 0 30px rgba(157, 77, 230, 0.35);
+    backdrop-filter: blur(12px);
+  }
+  /* filters in rows of round previews */
+  .booth .filter-picker {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 10px 8px;
+    overflow: visible;
+  }
+  .booth .filter-picker :deep(.option) {
+    width: 66px;
+    gap: 4px;
+  }
+  .booth .filter-picker :deep(.thumb) {
+    width: 50px;
+    height: 50px;
+  }
+  .booth .filter-picker :deep(.name) {
+    max-width: 66px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  /* frames as a wrapping list of pills */
+  .booth .picker {
+    justify-content: flex-start;
+    gap: 2px;
+    border-radius: 18px;
+  }
+  .booth .picker :deep(button) {
+    min-height: 32px;
+    padding: 4px 12px;
+    font-size: 13px;
+  }
+  .booth > section:not(.result):not(:has(> p)) > button {
+    max-width: none;
+    width: 100%;
+  }
+}
+
+/* While photos are being taken: panel stays, but faded and locked */
+.busy {
+  opacity: 0.6;
+  transition: opacity 0.2s;
 }
 </style>
