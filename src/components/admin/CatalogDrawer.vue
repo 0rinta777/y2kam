@@ -20,6 +20,10 @@ const active = ref(props.item?.active ?? true)
 const settings = reactive({ ...DEFAULT_SETTINGS, ...(props.item?.settings || {}) })
 const file = ref(null)
 const previewUrl = ref(props.item?.fileId ? fileUrl(props.item.fileId) : '')
+// Frames: optional cover picture for the round preview in the booth
+const coverFile = ref(null)
+const coverId = props.item?.settings?.coverId || null
+const coverUrl = ref(coverId ? fileUrl(coverId) : '')
 
 // Field errors (validation)
 const nameError = ref('')
@@ -51,6 +55,13 @@ function onFileChange(event) {
   fileError.value = ''
 }
 
+function onCoverChange(event) {
+  const chosen = event.target.files[0]
+  if (!chosen) return
+  coverFile.value = chosen
+  coverUrl.value = URL.createObjectURL(chosen) // show it before uploading
+}
+
 function validate() {
   nameError.value = name.value.trim() ? '' : 'give it a name'
   fileError.value =
@@ -64,8 +75,10 @@ function submit() {
     type: type.value,
     name: name.value.trim(),
     active: active.value,
-    settings: type.value === 'filter' ? { ...settings } : {},
+    // frames keep their cover picture's ID in settings
+    settings: type.value === 'filter' ? { ...settings } : { coverId },
     file: file.value,
+    coverFile: type.value === 'frame' ? coverFile.value : null,
   })
 }
 </script>
@@ -141,6 +154,13 @@ function submit() {
         </label>
         <p v-if="fileError" class="field-error" role="alert">{{ fileError }}</p>
         <img v-if="previewUrl" :src="previewUrl" alt="frame preview" class="frame-preview" />
+
+        <!-- Optional cover: the round picture shown in the booth's frame list -->
+        <label>
+          cover picture (optional, square, shown in the booth's round preview)
+          <input type="file" accept="image/png,image/jpeg,image/webp" @change="onCoverChange" />
+        </label>
+        <img v-if="coverUrl" :src="coverUrl" alt="cover preview" class="cover-preview" />
       </template>
 
       <!-- Active toggle -->
@@ -162,6 +182,16 @@ function submit() {
 </template>
 
 <style scoped>
+/* Round cover preview, like in the booth */
+.cover-preview {
+  width: 72px;
+  height: 72px;
+  object-fit: cover;
+  border: 3px solid #ffffff;
+  border-radius: 50%;
+  box-shadow: 0 0 12px rgba(199, 125, 255, 0.7);
+}
+
 .overlay {
   position: fixed;
   inset: 0;

@@ -189,7 +189,6 @@ table {
   background: rgba(28, 11, 51, 0.92);
   border: 1px solid rgba(215, 184, 255, 0.14);
   border-radius: 18px;
-
 }
 th,
 td {
@@ -223,9 +222,13 @@ tbody tr:hover td {
   border-radius: 6px;
   background: rgba(255, 255, 255, 0.06);
 }
+/* edit + delete side by side, but the cell stays a normal table cell */
 .actions {
-  display: flex;
-  gap: 8px;
+  white-space: nowrap;
+  text-align: right;
+}
+.actions button + button {
+  margin-left: 8px;
 }
 /* delete = pink outline */
 .actions button:last-child {
@@ -243,7 +246,6 @@ tbody tr:hover td {
   background: rgba(28, 11, 51, 0.92);
   border: 1px solid rgba(215, 184, 255, 0.14);
   border-radius: 18px;
-
 }
 .empty p {
   margin: 0;

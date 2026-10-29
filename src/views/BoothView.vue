@@ -7,7 +7,7 @@ import { useStrips } from '@/composables/useStrips'
 import { useCatalog, fileUrl } from '@/composables/useCatalog'
 import { toCss } from '@/lib/filters'
 import { buildStrip } from '@/lib/strip'
-import OptionPicker from '@/components/OptionPicker.vue'
+import FramePicker from '@/components/FramePicker.vue'
 import FilterPicker from '@/components/FilterPicker.vue'
 import FilterEffects from '@/components/FilterEffects.vue'
 
@@ -37,7 +37,13 @@ const frames = computed(() => [
   NO_FRAME,
   ...catalog.value
     .filter((item) => item.type === 'frame' && item.fileId)
-    .map((item) => ({ id: item.$id, name: item.name, url: fileUrl(item.fileId) })),
+    .map((item) => ({
+      id: item.$id,
+      name: item.name,
+      url: fileUrl(item.fileId),
+      // round picture in the frame list: the admin's cover picture, if there is one
+      cover: item.settings?.coverId ? fileUrl(item.settings.coverId) : null,
+    })),
 ])
 
 // --- Booth state ---
@@ -218,7 +224,7 @@ async function retake() {
       :inert="step === 'shooting'"
     >
       <FilterPicker v-model="filter" :options="filters" :stream="stream" />
-      <OptionPicker v-model="frame" label="frame" :options="frames" />
+      <FramePicker v-model="frame" :options="frames" />
       <button :disabled="step !== 'ready'" @click="takePhotos">
         {{ step === 'shooting' ? 'taking photos…' : 'take photos' }}
       </button>
@@ -649,16 +655,27 @@ async function retake() {
     overflow: hidden;
     text-overflow: ellipsis;
   }
-  /* frames as a wrapping list of pills */
-  .booth .picker {
+  /* frames: round previews in rows, same as the filters */
+  .booth .frame-picker {
+    flex-wrap: wrap;
     justify-content: flex-start;
-    gap: 2px;
-    border-radius: 18px;
+    gap: 10px 8px;
+    overflow: visible;
+    padding-top: 12px;
+    border-top: 1px solid rgba(215, 184, 255, 0.2); /* line between filters and frames */
   }
-  .booth .picker :deep(button) {
-    min-height: 32px;
-    padding: 4px 12px;
-    font-size: 13px;
+  .booth .frame-picker :deep(.option) {
+    width: 66px;
+    gap: 4px;
+  }
+  .booth .frame-picker :deep(.thumb) {
+    width: 50px;
+    height: 50px;
+  }
+  .booth .frame-picker :deep(.name) {
+    max-width: 66px;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .booth > section:not(.result):not(:has(> p)) > button {
     max-width: none;

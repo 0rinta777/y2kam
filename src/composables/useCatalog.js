@@ -57,9 +57,11 @@ export function useCatalog() {
   }
 
   // CREATE
-  async function createItem({ name, type, active, settings, file }) {
+  async function createItem({ name, type, active, settings, file, coverFile }) {
     let fileId = null
     if (file) fileId = (await uploadFile(file)).$id
+    // frames: optional cover picture, its ID is kept in settings
+    if (coverFile) settings = { ...settings, coverId: (await uploadFile(coverFile)).$id }
     await tablesDB.createRow({
       databaseId: DB_ID,
       tableId: TABLE,
@@ -69,11 +71,13 @@ export function useCatalog() {
     await loadAll()
   }
 
-  // Replace a frame image safely: upload the new one, save the row,
-  // and only then delete the old image (so the row never points to nothing)
-  async function updateItem(item, { name, active, settings, file }) {
+  // Update an item. New images (frame / cover) are uploaded and saved first,
+  // and only then are the old ones deleted, so the row never points to nothing.
+  async function updateItem(item, { name, active, settings, file, coverFile }) {
     let fileId = item.fileId
     if (file) fileId = (await uploadFile(file)).$id
+    const oldCoverId = item.settings?.coverId || null
+    if (coverFile) settings = { ...settings, coverId: (await uploadFile(coverFile)).$id }
     try {
       await tablesDB.updateRow({
         databaseId: DB_ID,
@@ -82,22 +86,33 @@ export function useCatalog() {
         data: { name, active, fileId, settings: JSON.stringify(settings || {}) },
       })
     } catch (e) {
-      // Row didn't save: remove the new upload again, the old image stays
+      // Row didn't save: remove the new uploads again, the old images stay
       if (file) await storage.deleteFile({ bucketId: BUCKET_ID, fileId }).catch(() => {})
+      if (coverFile)
+        await storage.deleteFile({ bucketId: BUCKET_ID, fileId: settings.coverId }).catch(() => {})
       throw e
     }
-    if (file && item.fileId) {
-      await storage
-        .deleteFile({ bucketId: BUCKET_ID, fileId: item.fileId })
-        .catch((e) => console.error('old frame cleanup failed:', e))
-    }
+    // Saved: now the old images can go
+    if (file && item.fileId) await removeFile(item.fileId)
+    if (coverFile && oldCoverId) await removeFile(oldCoverId)
     await loadAll()
   }
-  // DELETE (and its image)
+
+  function removeFile(id) {
+    return storage
+      .deleteFile({ bucketId: BUCKET_ID, fileId: id })
+      .catch((e) => console.error('old image cleanup failed:', e))
+  }
+
+  // DELETE: the row, then its frame image and cover picture
   async function deleteItem(item) {
     await tablesDB.deleteRow({ databaseId: DB_ID, tableId: TABLE, rowId: item.$id })
     if (item.fileId)
       await storage.deleteFile({ bucketId: BUCKET_ID, fileId: item.fileId }).catch(() => {})
+    if (item.settings?.coverId)
+      await storage
+        .deleteFile({ bucketId: BUCKET_ID, fileId: item.settings.coverId })
+        .catch(() => {})
     items.value = items.value.filter((i) => i.$id !== item.$id)
   }
 
