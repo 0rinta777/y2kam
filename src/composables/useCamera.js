@@ -17,6 +17,7 @@ export function useCamera() {
         audio: false,
       })
       videoEl.value.srcObject = stream.value
+      videoEl.value.muted = true // iPhone only autoplays muted videos
       await videoEl.value.play()
     } catch (e) {
       // If we got the camera but something after that failed, turn it off again

@@ -5,6 +5,7 @@ import { useAuth } from '@/composables/useAuth'
 import NotificationBell from '@/components/NotificationBell.vue'
 import LeopardBackground from '@/components/LeopardBackground.vue'
 import { getProfile, avatarUrl, myAvatarId } from '@/composables/useProfile'
+import { clearImageCache } from '@/composables/useStrips'
 
 const { user, isLoggedIn, isAdmin, logout } = useAuth()
 const router = useRouter()
@@ -38,6 +39,7 @@ watch(
 
 async function onLogout() {
   await logout()
+  clearImageCache() // downloaded photos are forgotten on log out
   router.push('/')
 }
 </script>

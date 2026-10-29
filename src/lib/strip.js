@@ -1,4 +1,4 @@
-import { applyEffects } from '@/lib/filters'
+import { applyEffects, applyCssFallback, canvasFiltersWork } from '@/lib/filters'
 
 // Fixed strip size. Every frame image must be designed at exactly this size.
 export const STRIP_W = 600
@@ -25,6 +25,8 @@ export async function buildStrip(photos, frameUrl = null, effects = {}) {
   photos.forEach((photo, i) => {
     const y = PAD + i * (PHOTO_H + GAP)
     drawCover(ctx, photo, PAD, y, PHOTO_W, PHOTO_H)
+    // Safari: canvas filters don't work there, so do the colour changes by hand
+    if (!canvasFiltersWork) applyCssFallback(ctx, PAD, y, PHOTO_W, PHOTO_H, effects)
     applyEffects(ctx, PAD, y, PHOTO_W, PHOTO_H, effects)
   })
 

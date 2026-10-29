@@ -14,6 +14,7 @@ defineEmits(['update:modelValue'])
 function connect(el) {
   if (!el || !props.stream || el.srcObject === props.stream) return
   el.srcObject = props.stream
+  el.muted = true // iPhone only autoplays muted videos
   el.play().catch(() => {}) // muted videos may play without a click
 }
 </script>
@@ -29,13 +30,7 @@ function connect(el) {
       @click="$emit('update:modelValue', option)"
     >
       <span class="thumb">
-        <video
-          v-if="stream"
-          :ref="connect"
-          playsinline
-          muted
-          :style="{ filter: option.css }"
-        />
+        <video v-if="stream" :ref="connect" playsinline muted :style="{ filter: option.css }" />
         <FilterEffects :settings="option.settings" />
       </span>
       <span class="name">{{ option.name }}</span>

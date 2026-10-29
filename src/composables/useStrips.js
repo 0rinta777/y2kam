@@ -1,4 +1,4 @@
-import { ref } from 'vue'
+import { ref, reactive } from 'vue'
 import { ID, Permission, Role, Query } from 'appwrite'
 import { tablesDB, storage, DB_ID, BUCKET_ID } from '@/lib/appwrite'
 import { useAuth } from '@/composables/useAuth'
@@ -29,11 +29,47 @@ function filePermissions(userId, isPublic) {
   return perms
 }
 
-// URL for showing a strip image in an <img>
+// URL for showing a strip image in an <img>.
+// Photos are downloaded with fetch, sending the login the same way the Appwrite SDK does.
+// Why: Safari (iPhone/iPad) blocks Appwrite's login cookie on normal <img> requests,
+// so member-only and private photos would not load there.
+const imageCache = reactive({}) // fileId → local blob URL
+const loadingImages = new Set()
+
 export function imageUrl(fileId) {
-  return String(storage.getFileView({ bucketId: BUCKET_ID, fileId }))
+  if (!fileId) return ''
+  if (imageCache[fileId]) return imageCache[fileId]
+  if (!loadingImages.has(fileId)) loadImage(fileId)
+  return '' // the <img> updates by itself once the photo is loaded
 }
 
+async function loadImage(fileId) {
+  loadingImages.add(fileId)
+  const url = String(storage.getFileView({ bucketId: BUCKET_ID, fileId }))
+  try {
+    // Safari: the SDK keeps the login in localStorage and sends it as this header
+    const fallback = localStorage.getItem('cookieFallback')
+    const res = await fetch(url, {
+      credentials: 'include', // other browsers: send the login cookie
+      headers: fallback ? { 'X-Fallback-Cookies': fallback } : {},
+    })
+    if (!res.ok) throw new Error(`photo request failed (${res.status})`)
+    imageCache[fileId] = URL.createObjectURL(await res.blob())
+  } catch (e) {
+    console.error('photo load failed:', e)
+    imageCache[fileId] = url // fall back to the normal link
+  } finally {
+    loadingImages.delete(fileId)
+  }
+}
+
+// Forget downloaded photos (on log out, so the next user can't see them)
+export function clearImageCache() {
+  for (const id of Object.keys(imageCache)) {
+    if (imageCache[id].startsWith('blob:')) URL.revokeObjectURL(imageCache[id])
+    delete imageCache[id]
+  }
+}
 export function useStrips() {
   const { user } = useAuth()
 
